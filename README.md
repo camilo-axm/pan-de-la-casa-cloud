@@ -30,6 +30,19 @@ La documentación interactiva está en [localhost:8000/api/docs](http://localhos
 | `APP_ENV` | Entorno que devuelve `/api/info`. Por defecto, `local`. |
 | `APP_VERSION` | Versión que devuelve `/api/info`. Por defecto, `local`. |
 
+## Ejecutar con Docker Compose
+
+Con Docker Desktop abierto, ejecuta estos comandos desde la raíz del repositorio. Usa el archivo `app/.env` configurado en la sección anterior.
+
+```powershell
+docker compose up --build -d
+docker compose ps
+```
+
+La API queda disponible en [localhost:8002/api/docs](http://localhost:8002/api/docs). Comprueba la conexión con MongoDB en [localhost:8002/readyz](http://localhost:8002/readyz). Compose usa `mongodb://mongo:27017` dentro de su red y guarda los datos de MongoDB en el volumen `datos_mongo`.
+
+Para verificar la persistencia, crea un pedido desde Swagger, reinicia MongoDB con `docker compose restart mongo` y vuelve a consultar el pedido. Si lo creaste con `es_prueba: true`, usa `pruebas=true` al listar. Para detener los servicios conservando el volumen, ejecuta `docker compose down`.
+
 ## Rutas principales
 
 | Ruta | Uso |
