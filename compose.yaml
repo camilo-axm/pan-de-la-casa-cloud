@@ -1,0 +1,24 @@
+services:
+  api:
+    build: ./app
+    env_file: ./app/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+    ports:
+      - "127.0.0.1:8002:8000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:8.0
+    volumes:
+      - datos_mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand({ ping: 1 })"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  datos_mongo:
