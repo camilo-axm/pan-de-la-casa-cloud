@@ -1,0 +1,62 @@
+name: Retirar entorno dev
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Escribe dev para confirmar la eliminación del entorno y sus datos.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  destroy:
+    name: Eliminar recursos de dev
+    runs-on: ubuntu-latest
+    environment: dev
+    concurrency: terraform-dev
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TF_IN_AUTOMATION: "true"
+      TF_VAR_location: ${{ vars.AZURE_LOCATION }}
+      # El módulo exige una referencia de imagen incluso al planificar la eliminación.
+      TF_VAR_image: ghcr.io/none/none@sha256:0000000000000000000000000000000000000000000000000000000000000000
+      ROOT: infra/environments/dev
+    steps:
+      - name: Verificar confirmación
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          if [[ "$CONFIRM" != dev ]]; then
+            echo "::error::La confirmación debe ser dev"
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.17.1
+          terraform_wrapper: false
+      - name: Inicializar estado remoto
+        env:
+          STATE_RG: ${{ vars.TF_STATE_RESOURCE_GROUP }}
+          STATE_ACCOUNT: ${{ vars.TF_STATE_STORAGE_ACCOUNT }}
+          STATE_CONTAINER: ${{ vars.TF_STATE_CONTAINER }}
+        run: |
+          : "${STATE_RG:?Falta TF_STATE_RESOURCE_GROUP}"
+          : "${STATE_ACCOUNT:?Falta TF_STATE_STORAGE_ACCOUNT}"
+          : "${STATE_CONTAINER:?Falta TF_STATE_CONTAINER}"
+          terraform -chdir="$ROOT" init -input=false \
+            -backend-config="resource_group_name=$STATE_RG" \
+            -backend-config="storage_account_name=$STATE_ACCOUNT" \
+            -backend-config="container_name=$STATE_CONTAINER" \
+            -backend-config="key=panaderia-dev.tfstate"
+      - name: Preparar el plan de eliminación
+        run: terraform -chdir="$ROOT" plan -destroy -input=false -out=destroy.tfplan
+      - name: Aplicar el plan de eliminación
+        run: terraform -chdir="$ROOT" apply -input=false destroy.tfplan
