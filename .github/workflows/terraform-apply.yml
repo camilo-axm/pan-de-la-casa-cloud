@@ -1,0 +1,99 @@
+name: Aplicar Terraform
+
+on:
+  workflow_call:
+    inputs:
+      root:
+        description: Carpeta dentro de infra/environments
+        type: string
+        required: true
+      environment:
+        description: Ambiente de GitHub asociado a la identidad OIDC
+        type: string
+        required: true
+      image:
+        description: Imagen fijada por digest. Se omite para la infraestructura compartida.
+        type: string
+        default: ""
+      smoke:
+        description: Ejecuta la prueba de humo contra la URL desplegada
+        type: boolean
+        default: false
+
+jobs:
+  apply:
+    name: ${{ inputs.root }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    environment: ${{ inputs.environment }}
+    concurrency: terraform-${{ inputs.root }}
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      TF_IN_AUTOMATION: "true"
+      TF_VAR_location: ${{ vars.AZURE_LOCATION }}
+      ROOT: infra/environments/${{ inputs.root }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar configuración
+        env:
+          VALUES: >-
+            AZURE_CLIENT_ID=${{ vars.AZURE_CLIENT_ID }}
+            AZURE_TENANT_ID=${{ vars.AZURE_TENANT_ID }}
+            AZURE_SUBSCRIPTION_ID=${{ vars.AZURE_SUBSCRIPTION_ID }}
+            AZURE_LOCATION=${{ vars.AZURE_LOCATION }}
+            TF_STATE_RESOURCE_GROUP=${{ vars.TF_STATE_RESOURCE_GROUP }}
+            TF_STATE_STORAGE_ACCOUNT=${{ vars.TF_STATE_STORAGE_ACCOUNT }}
+            TF_STATE_CONTAINER=${{ vars.TF_STATE_CONTAINER }}
+        run: |
+          failed=0
+          for pair in $VALUES; do
+            if [[ -z "${pair#*=}" ]]; then
+              echo "::error::Falta la variable ${pair%%=*}"
+              failed=1
+            fi
+          done
+          exit "$failed"
+      - name: Variables de la aplicación
+        if: inputs.image != ''
+        env:
+          IMAGE: ${{ inputs.image }}
+          ALERT_EMAIL: ${{ vars.ALERT_EMAIL }}
+        run: |
+          echo "TF_VAR_image=$IMAGE" >> "$GITHUB_ENV"
+          # El correo habilita las alertas y el presupuesto del ambiente.
+          if [[ -n "$ALERT_EMAIL" ]]; then
+            echo "TF_VAR_alert_email=$ALERT_EMAIL" >> "$GITHUB_ENV"
+          fi
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.17.1
+          terraform_wrapper: false
+      - name: Terraform init
+        env:
+          STATE_KEY: panaderia-${{ inputs.root }}.tfstate
+          STATE_RG: ${{ vars.TF_STATE_RESOURCE_GROUP }}
+          STATE_ACCOUNT: ${{ vars.TF_STATE_STORAGE_ACCOUNT }}
+          STATE_CONTAINER: ${{ vars.TF_STATE_CONTAINER }}
+        run: |
+          terraform -chdir="$ROOT" init -input=false \
+            -backend-config="resource_group_name=$STATE_RG" \
+            -backend-config="storage_account_name=$STATE_ACCOUNT" \
+            -backend-config="container_name=$STATE_CONTAINER" \
+            -backend-config="key=$STATE_KEY"
+      - name: Terraform plan
+        run: terraform -chdir="$ROOT" plan -input=false -out=deploy.tfplan
+      - name: Terraform apply
+        run: terraform -chdir="$ROOT" apply -input=false deploy.tfplan
+      - name: Prueba de humo
+        if: inputs.smoke
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          URL="$(terraform -chdir="$ROOT" output -raw app_url)"
+          bash scripts/smoke.sh "$URL"
+          echo "### $ENVIRONMENT desplegado en $URL" >> "$GITHUB_STEP_SUMMARY"
