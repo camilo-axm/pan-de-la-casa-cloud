@@ -38,14 +38,12 @@ def validar_hora(hora: datetime, ahora: datetime) -> datetime:
     if hora.tzinfo is None:
         hora = hora.replace(tzinfo=config.ZONA)
     local = hora.astimezone(config.ZONA)
-    # Se aplica desde el momento de la solicitud para evitar reservas fuera del plazo.
     if local < ahora + timedelta(minutes=config.MINUTOS_PREPARACION):
         raise HTTPException(
             422, f"El pedido necesita {config.MINUTOS_PREPARACION} minutos de preparación")
     if local > ahora + timedelta(days=config.DIAS_MAXIMOS):
         raise HTTPException(
             422, f"Solo se reciben pedidos para los próximos {config.DIAS_MAXIMOS} días")
-    # La comprobación usa la hora local normalizada, no la zona horaria del cliente.
     if not config.HORA_APERTURA <= local.time() <= config.HORA_CIERRE:
         raise HTTPException(422, "La panadería entrega pedidos entre las 6:00 y las 20:00")
     return local
@@ -68,12 +66,11 @@ def create_app(settings: Settings | None = None, db: Database | None = None) -> 
             state["listo"] = True
         return state["db"]
 
-    # Alias usado por los endpoints para solicitar automáticamente la conexión.
     Db = Annotated[Database, Depends(get_db)]
 
     def admin(x_admin_key: str = Header(default="")) -> None:
         """Protege las operaciones administrativas frente a accesos no autorizados."""
-        # La comparación de HMAC reduce la exposición a diferencias de tiempo en la clave.
+        # Compara la clave en tiempo constante.
         if not hmac.compare_digest(x_admin_key.encode(), settings.admin_api_key.encode()):
             raise HTTPException(401, "Clave de administrador inválida")
 
@@ -87,7 +84,6 @@ def create_app(settings: Settings | None = None, db: Database | None = None) -> 
                 "metodo": request.method, "ruta": request.url.path, "estado": response.status_code,
                 "ms": round((time.perf_counter() - inicio) * 1000), "ambiente": settings.app_env,
             }))
-        # Cabeceras básicas de endurecimiento aplicadas a todas las respuestas.
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -125,11 +121,9 @@ def create_app(settings: Settings | None = None, db: Database | None = None) -> 
         """Valida y registra un pedido usando los precios vigentes del catálogo."""
         ahora = datetime.now(config.ZONA)
         hora = validar_hora(entrada.hora_recogida, ahora)
-        # Agrupa repeticiones del mismo producto y obtiene la cantidad total solicitada.
         cantidades: dict[str, int] = {}
         for item in entrada.items:
             cantidades[item.producto_id] = cantidades.get(item.producto_id, 0) + item.cantidad
-        # Solo se toman productos disponibles; el resultado sirve como catálogo autorizado.
         catalogo = {p["_id"]: p for p in db.productos.find({"_id": {"$in": list(cantidades)},
                                                              "disponible": True})}
         faltan = sorted(set(cantidades) - set(catalogo))
@@ -168,6 +162,7 @@ def create_app(settings: Settings | None = None, db: Database | None = None) -> 
             raise HTTPException(404, "Pedido no encontrado")
         return _pedido(db.pedidos.find_one({"_id": pedido_id}))
 
-    # Se monta al final para actuar como respaldo y servir la interfaz web.
-    app.mount("/", StaticFiles(directory=STATIC, html=True), name="static")
+    # El montaje en "/" va después de las rutas de la API.
+    if STATIC.is_dir():
+        app.mount("/", StaticFiles(directory=STATIC, html=True), name="static")
     return app

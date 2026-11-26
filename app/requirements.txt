@@ -1,0 +1,5 @@
+fastapi==0.165.0
+pymongo==4.20.1
+python-dotenv>=1,<2
+tzdata==2026.6
+uvicorn>=0.30,<1

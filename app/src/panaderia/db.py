@@ -28,7 +28,7 @@ CATALOGO = [
 
 def connect(uri: str, name: str) -> Database:
     if uri.startswith("mongomock://"):
-        # Base en memoria para desarrollar sin Docker ni cuenta de Azure. Solo existe en el extra dev.
+        # Base en memoria para desarrollo y pruebas.
         import mongomock
 
         return mongomock.MongoClient(tz_aware=True)[name]
@@ -37,7 +37,7 @@ def connect(uri: str, name: str) -> Database:
 
 
 def prepare(db: Database) -> None:
-    """Crea los indices y carga el catalogo inicial. Se puede repetir sin duplicar datos."""
+    """Crea los índices y carga el catálogo sin sobrescribir productos existentes."""
     # Cosmos DB for MongoDB solo indexa _id por defecto y exige un indice para ordenar.
     db.productos.create_index([("nombre", ASCENDING)])
     db.pedidos.create_index([("creado_en", DESCENDING)])
@@ -47,4 +47,3 @@ def prepare(db: Database) -> None:
             {"$setOnInsert": {**producto, "disponible": True}},
             upsert=True,
         )
-    
