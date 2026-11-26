@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Pan de la Casa · Panel de pedidos</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-in">
+      <div>
+        <p class="brand">Pan de la Casa</p>
+        <p class="tag">Panel del administrador</p>
+      </div>
+      <a class="link" href="/" id="ir-tienda">Catálogo</a>
+      <button class="link" type="button" id="salir" hidden>Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <form id="acceso" class="panel login" novalidate>
+      <h2>Ingreso al panel</h2>
+      <p class="muted">Solo para el personal de la panadería.</p>
+      <div id="error" class="alert error" role="alert" hidden>
+        <strong id="error-titulo">Clave incorrecta</strong>
+        <span id="error-texto">Revísala e inténtalo otra vez.</span>
+      </div>
+      <label>Clave de administrador
+        <input id="clave" type="password" autocomplete="off" required>
+      </label>
+      <button id="entrar" class="full" type="submit">Ver pedidos</button>
+    </form>
+
+    <section id="pedidos" hidden aria-labelledby="t-pedidos">
+      <div class="toolbar">
+        <div>
+          <h1 id="t-pedidos">Pedidos</h1>
+          <p class="muted">Ordenados por hora de recogida. Se muestran los 200 más recientes.</p>
+        </div>
+        <button class="sec" type="button" id="actualizar">↻ Actualizar</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong id="n-recibido">0</strong><span>Recibidos</span></div>
+        <div class="stat"><strong id="n-listo">0</strong><span>Listos</span></div>
+        <div class="stat"><strong id="n-entregado">0</strong><span>Entregados</span></div>
+        <div class="stat"><strong id="vendido">$0</strong><span>Vendido (sin cancelados)</span></div>
+      </div>
+      <div class="chips" id="filtros" role="group" aria-label="Filtrar por estado"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Pedido</th><th>Recogida</th><th>Cliente</th><th>Productos</th><th>Total</th><th>Estado</th><th>Cambiar estado</th></tr>
+          </thead>
+          <tbody id="filas"></tbody>
+        </table>
+      </div>
+      <p id="aviso" role="status" aria-live="polite"></p>
+      <p class="hint">La franja naranja marca los pedidos recibidos que se recogen en los próximos 30 minutos.</p>
+    </section>
+  </main>
+  <script src="/admin.js"></script>
+</body>
+</html>
