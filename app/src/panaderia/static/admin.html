@@ -3,63 +3,267 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex">
-  <title>Pan de la Casa · Panel de pedidos</title>
+  <meta name="robots" content="noindex, nofollow">
+  <title>Pan de la Casa · Panel del personal</title>
+  <link rel="icon" type="image/svg+xml" href="/img/sitio/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Saira:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
+<body class="admin oscuro">
   <header class="top">
     <div class="wrap top-in">
-      <div>
-        <p class="brand">Pan de la Casa</p>
-        <p class="tag">Panel del administrador</p>
+      <a class="marca-link" href="/admin.html" aria-label="Panel de Pan de la Casa">
+        <img class="logo" src="/img/sitio/logo.svg" alt="" width="46" height="46">
+        <span><span class="brand">Pan de la Casa</span><span class="tag">Panel del personal</span></span>
+      </a>
+      <div class="sesion" id="sesion" hidden>
+        <span><strong id="quien"></strong> <small id="rol"></small></span>
+        <button class="link" type="button" id="salir">Cerrar sesión</button>
       </div>
-      <a class="link" href="/" id="ir-tienda">Catálogo</a>
-      <button class="link" type="button" id="salir" hidden>Cerrar sesión</button>
     </div>
   </header>
 
   <main class="wrap">
+    <!-- Acceso -->
     <form id="acceso" class="panel login" novalidate>
-      <h2>Ingreso al panel</h2>
-      <p class="muted">Solo para el personal de la panadería.</p>
-      <div id="error" class="alert error" role="alert" hidden>
-        <strong id="error-titulo">Clave incorrecta</strong>
-        <span id="error-texto">Revísala e inténtalo otra vez.</span>
-      </div>
-      <label>Clave de administrador
-        <input id="clave" type="password" autocomplete="off" required>
+      <h2>Acceso del personal</h2>
+      <p class="muted">Entra con el correo y la contraseña que te asignó el dueño.</p>
+      <div id="error-acceso" class="alert error" role="alert" hidden></div>
+      <label>Correo
+        <input id="correo" type="email" autocomplete="username" required>
       </label>
-      <button id="entrar" class="full" type="submit">Ver pedidos</button>
+      <label>Contraseña
+        <input id="clave" type="password" autocomplete="current-password" required>
+      </label>
+      <button id="entrar" class="full" type="submit">Ingresar</button>
     </form>
 
-    <section id="pedidos" hidden aria-labelledby="t-pedidos">
-      <div class="toolbar">
-        <div>
-          <h1 id="t-pedidos">Pedidos</h1>
-          <p class="muted">Ordenados por hora de recogida. Se muestran los 200 más recientes.</p>
+    <div id="panel" hidden>
+      <nav class="tabs" id="tabs" aria-label="Secciones del panel">
+        <button type="button" data-tab="pedidos">Pedidos</button>
+        <button type="button" data-tab="catalogo" data-roles="dueno administrador">Catálogo</button>
+        <button type="button" data-tab="reportes" data-roles="dueno administrador">Reportes</button>
+        <button type="button" data-tab="mensajes" data-roles="dueno administrador">Mensajes <span class="badge" id="no-leidos" hidden>0</span></button>
+        <button type="button" data-tab="usuarios" data-roles="dueno">Usuarios</button>
+        <button type="button" data-tab="cuenta">Mi cuenta</button>
+      </nav>
+      <p id="aviso" class="aviso" role="status" aria-live="polite"></p>
+
+      <!-- Pedidos -->
+      <section id="tab-pedidos" class="tab" aria-labelledby="t-pedidos">
+        <div class="toolbar">
+          <div>
+            <h1 id="t-pedidos">Pedidos</h1>
+            <p class="muted">Ordenados por hora de recogida. Un pedido avanza de Recibido a Listo y a Entregado. Se puede cancelar antes de entregarlo.</p>
+          </div>
+          <button class="sec" type="button" id="actualizar">↻ Actualizar</button>
         </div>
-        <button class="sec" type="button" id="actualizar">↻ Actualizar</button>
-      </div>
-      <div class="stats">
-        <div class="stat"><strong id="n-recibido">0</strong><span>Recibidos</span></div>
-        <div class="stat"><strong id="n-listo">0</strong><span>Listos</span></div>
-        <div class="stat"><strong id="n-entregado">0</strong><span>Entregados</span></div>
-        <div class="stat"><strong id="vendido">$0</strong><span>Vendido (sin cancelados)</span></div>
-      </div>
-      <div class="chips" id="filtros" role="group" aria-label="Filtrar por estado"></div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Pedido</th><th>Recogida</th><th>Cliente</th><th>Productos</th><th>Total</th><th>Estado</th><th>Cambiar estado</th></tr>
-          </thead>
-          <tbody id="filas"></tbody>
-        </table>
-      </div>
-      <p id="aviso" role="status" aria-live="polite"></p>
-      <p class="hint">La franja naranja marca los pedidos recibidos que se recogen en los próximos 30 minutos.</p>
-    </section>
+        <div class="stats">
+          <div class="stat"><strong id="n-recibido">0</strong><span>Por preparar</span></div>
+          <div class="stat"><strong id="n-listo">0</strong><span>Listos para entregar</span></div>
+          <div class="stat"><strong id="n-entregado">0</strong><span>Entregados</span></div>
+          <div class="stat"><strong id="n-cancelado">0</strong><span>Cancelados</span></div>
+        </div>
+        <div class="chips" id="filtros" role="group" aria-label="Filtrar por estado"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Pedido</th><th>Recogida</th><th>Cliente</th><th>Productos</th><th>Total</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="filas-pedidos"></tbody>
+          </table>
+        </div>
+        <p class="hint">La franja naranja marca los pedidos sin entregar que se recogen en los próximos 30 minutos o que ya pasaron su hora.</p>
+      </section>
+
+      <!-- Catálogo -->
+      <section id="tab-catalogo" class="tab" aria-labelledby="t-catalogo" hidden>
+        <div class="toolbar">
+          <div>
+            <h1 id="t-catalogo">Catálogo</h1>
+            <p class="muted">Precios, unidades disponibles y combos. Lo oculto no aparece en la tienda. Lo agotado aparece, pero no se puede pedir.</p>
+          </div>
+          <div class="acciones">
+            <button type="button" id="nuevo-producto">+ Producto</button>
+            <button type="button" class="sec" id="nuevo-combo">+ Combo</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Producto</th><th>Precio</th><th>Unidades</th><th>En la tienda</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="filas-catalogo"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Reportes -->
+      <section id="tab-reportes" class="tab" aria-labelledby="t-reportes" hidden>
+        <div class="toolbar">
+          <div>
+            <h1 id="t-reportes">Reportes</h1>
+            <p class="muted">Pedidos según su fecha de recogida. Las ventas cuentan solo los pedidos entregados.</p>
+          </div>
+        </div>
+        <div class="periodo">
+          <div class="chips" id="periodos" role="group" aria-label="Período del reporte"></div>
+          <form id="rango" class="rango" novalidate>
+            <label>Desde <input type="date" id="desde" required></label>
+            <label>Hasta <input type="date" id="hasta" required></label>
+            <button type="submit" class="sec">Ver</button>
+          </form>
+        </div>
+        <p class="muted" id="rango-texto"></p>
+        <div class="stats">
+          <div class="stat"><strong id="r-ventas">$0</strong><span>Ventas (entregados)</span></div>
+          <div class="stat"><strong id="r-entregados">0</strong><span>Pedidos entregados</span></div>
+          <div class="stat"><strong id="r-ticket">$0</strong><span>Valor promedio por pedido</span></div>
+          <div class="stat"><strong id="r-unidades">0</strong><span>Productos vendidos</span></div>
+        </div>
+        <div class="reporte">
+          <div class="panel">
+            <h2>Pedidos por estado</h2>
+            <table class="simple">
+              <thead><tr><th>Estado</th><th>Pedidos</th><th>Dinero</th></tr></thead>
+              <tbody id="r-estados"></tbody>
+            </table>
+          </div>
+          <div class="panel">
+            <h2>Más vendidos</h2>
+            <table class="simple">
+              <thead><tr><th>Producto</th><th>Unidades</th><th>Dinero</th></tr></thead>
+              <tbody id="r-productos"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel grafica-panel">
+          <div class="toolbar sin-margen"><h2 id="r-serie-titulo">Ventas por día</h2><small class="muted" id="r-serie-tope"></small></div>
+          <div class="grafica" id="r-serie" role="img" aria-label="Ventas del período"></div>
+        </div>
+      </section>
+
+      <!-- Mensajes -->
+      <section id="tab-mensajes" class="tab" aria-labelledby="t-mensajes" hidden>
+        <div class="toolbar">
+          <div>
+            <h1 id="t-mensajes">Mensajes</h1>
+            <p class="muted">Lo que escriben los clientes en "Contáctanos". Respóndeles por el teléfono o el correo que dejaron.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Recibido</th><th>De</th><th>Asunto</th><th>Mensaje</th><th>Acciones</th></tr></thead>
+            <tbody id="filas-mensajes"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Usuarios -->
+      <section id="tab-usuarios" class="tab" aria-labelledby="t-usuarios" hidden>
+        <div class="toolbar">
+          <div>
+            <h1 id="t-usuarios">Usuarios y roles</h1>
+            <p class="muted"><strong>Administrador:</strong> pedidos, catálogo y reportes. <strong>Empleado:</strong> solo atiende pedidos. Solo el dueño gestiona usuarios.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="filas-usuarios"></tbody>
+          </table>
+        </div>
+        <form id="form-usuario" class="panel form-linea" novalidate>
+          <h2>Agregar persona</h2>
+          <div id="error-usuario" class="alert error" role="alert" hidden></div>
+          <div class="campos">
+            <label>Nombre <input id="u-nombre" required minlength="2" maxlength="80"></label>
+            <label>Correo <input id="u-correo" type="email" required></label>
+            <label>Rol
+              <select id="u-rol">
+                <option value="empleado">Empleado</option>
+                <option value="administrador">Administrador</option>
+              </select>
+            </label>
+            <label>Contraseña inicial <input id="u-clave" type="password" autocomplete="new-password" required minlength="10"></label>
+          </div>
+          <p class="hint">Mínimo 10 caracteres. Entrégasela a la persona para que la cambie en Mi cuenta.</p>
+          <button type="submit">Crear usuario</button>
+        </form>
+      </section>
+
+      <!-- Mi cuenta -->
+      <section id="tab-cuenta" class="tab" aria-labelledby="t-cuenta" hidden>
+        <form id="form-clave" class="panel login" novalidate>
+          <h2 id="t-cuenta">Cambiar mi contraseña</h2>
+          <p class="muted">Al cambiarla se cierran tus sesiones en otros equipos.</p>
+          <div id="error-clave" class="alert error" role="alert" hidden></div>
+          <label>Contraseña actual <input id="c-actual" type="password" autocomplete="current-password" required></label>
+          <label>Contraseña nueva <input id="c-nueva" type="password" autocomplete="new-password" required minlength="10"></label>
+          <label>Repite la contraseña nueva <input id="c-repite" type="password" autocomplete="new-password" required minlength="10"></label>
+          <button type="submit" class="full">Guardar contraseña</button>
+        </form>
+      </section>
+    </div>
   </main>
+
+  <!-- Editor de productos y combos -->
+  <dialog id="editor" aria-labelledby="e-titulo">
+    <form id="form-producto" method="dialog" novalidate>
+      <h2 id="e-titulo">Producto</h2>
+      <div class="editor-cols">
+      <div class="editor-campos">
+      <div id="error-producto" class="alert error" role="alert" hidden></div>
+      <label>Nombre <input id="p-nombre" required minlength="2" maxlength="60"></label>
+      <label>Descripción <input id="p-descripcion" required minlength="2" maxlength="140"></label>
+      <div class="dos">
+        <label>Categoría <input id="p-categoria" list="categorias-lista" required minlength="2" maxlength="30"></label>
+        <label>Precio (COP) <input id="p-precio" type="number" min="100" max="1000000" step="100" required></label>
+      </div>
+      <datalist id="categorias-lista"></datalist>
+      <div class="foto-campo">
+        <span class="etiqueta" id="p-foto-titulo">Foto</span>
+        <input type="hidden" id="p-foto">
+        <input type="file" id="p-archivo" accept="image/jpeg,image/png,image/webp" hidden>
+        <div id="p-zona" class="zona-foto" role="button" tabindex="0" aria-labelledby="p-foto-titulo p-zona-texto">
+          <img id="p-foto-vista" alt="">
+          <div class="zona-texto" id="p-zona-texto">
+            <strong>Sube una foto desde tu equipo</strong>
+            <span>Haz clic aquí o arrastra la imagen. JPG, PNG o WebP.</span>
+          </div>
+        </div>
+        <p id="p-foto-estado" class="hint" role="status">La tienda la muestra recortada en formato horizontal (3:2).</p>
+        <details id="p-galeria-caja">
+          <summary>O usa una foto que ya está guardada</summary>
+          <div id="p-galeria" class="galeria"></div>
+        </details>
+      </div>
+      <div id="p-inventario">
+        <label>Unidades disponibles <input id="p-unidades" type="number" min="0" max="10000" step="1"></label>
+        <label class="check"><input type="checkbox" id="p-sin-limite"> Sin control de inventario</label>
+      </div>
+      <fieldset id="p-componentes-caja" hidden>
+        <legend>Productos del combo</legend>
+        <div id="p-componentes"></div>
+        <button type="button" class="sec" id="p-agregar-componente">+ Agregar producto</button>
+        <p class="hint">Las unidades del combo dependen de las de sus productos.</p>
+      </fieldset>
+      </div>
+      <aside class="editor-vista" aria-label="Vista previa">
+        <p class="etiqueta">Así se verá en la tienda</p>
+        <div id="p-vista-tarjeta"></div>
+        <p class="hint">Se actualiza mientras escribes. Los clientes no ven nada hasta que guardes.</p>
+      </aside>
+      </div>
+      <div class="acciones fin">
+        <button type="button" class="sec" id="p-cancelar">Cancelar</button>
+        <button type="submit" id="p-guardar">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="/admin.js"></script>
 </body>
 </html>

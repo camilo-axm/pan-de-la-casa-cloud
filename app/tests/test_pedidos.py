@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 
 import pytest
-
 from conftest import manana
+
 from panaderia import config
 
 
@@ -67,11 +67,11 @@ def test_no_se_aceptan_pedidos_a_mas_de_una_semana(client, pedido):
     assert client.post("/api/pedidos", json=pedido).status_code == 422
 
 
-def test_listar_pedidos_exige_la_clave(client, pedido):
+def test_listar_pedidos_exige_iniciar_sesion(client, pedido):
     client.post("/api/pedidos", json=pedido)
     assert client.get("/api/pedidos").status_code == 401
-    otra = {"X-Admin-Key": "otra-clave-0123456789"}
-    assert client.get("/api/pedidos", headers=otra).status_code == 401
+    falsa = {"Authorization": "Bearer token-inventado"}
+    assert client.get("/api/pedidos", headers=falsa).status_code == 401
 
 
 def test_el_administrador_ve_primero_el_pedido_mas_reciente(client, db, pedido, admin):

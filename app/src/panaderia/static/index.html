@@ -1,90 +1,258 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-CO">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pan de la Casa · Pedidos para recoger</title>
-  <link rel="stylesheet" href="/styles.css">
+  <title>Pan de la Casa | Panadería de barrio con pedidos para recoger</title>
+  <meta name="description" content="Pan recién horneado, pandebonos, almojábanas, hojaldres y combos. Haz tu pedido en línea y recógelo en la panadería sin hacer fila.">
+  <meta name="theme-color" content="#24170F">
+  <link rel="icon" type="image/svg+xml" href="/img/sitio/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Saira+Condensed:wght@600;700;800&family=Saira:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="/inicio.css">
 </head>
 <body>
-  <header class="top">
-    <div class="wrap top-in">
-      <div>
-        <p class="brand">Pan de la Casa</p>
-        <p class="tag">Pide por la web y recoge en la panadería</p>
+  <a class="saltar" href="#principal">Saltar al contenido</a>
+
+  <!-- Franja de ofertas: los mensajes se arman en inicio.js con los combos del catálogo -->
+  <div class="oferta" id="oferta" role="region" aria-label="Ofertas">
+    <p class="oferta-texto" id="oferta-texto" aria-live="polite">Pedidos para recoger todos los días, de 6:00 a. m. a 8:00 p. m.</p>
+    <button class="oferta-cerrar" id="oferta-cerrar" type="button" aria-label="Cerrar ofertas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+
+  <header class="top" id="top">
+    <div class="envoltura top-in">
+      <a class="marca" href="/" aria-label="Pan de la Casa, ir al inicio">
+        <img src="/img/sitio/logo.svg" alt="" width="48" height="48">
+        <span class="marca-txt">Pan de la Casa<small>Panadería de barrio</small></span>
+      </a>
+      <nav class="nav" id="nav" aria-label="Principal">
+        <a href="#productos">Productos</a>
+        <a href="#combos">Combos</a>
+        <a href="#como-pedir">Cómo pedir</a>
+        <a href="#mi-pedido">Mi pedido</a>
+        <a href="#visitanos">Visítanos</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+      <div class="top-acciones">
+        <a class="btn btn-rojo top-pedir" href="/pedir">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.3 11h10.8l2.2-8H6.6"/><circle cx="9.5" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>
+          Hacer pedido
+        </a>
+        <button class="hamburguesa" id="hamburguesa" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav">
+          <span></span><span></span><span></span>
+        </button>
       </div>
-      <a class="link" href="/admin.html">Panel</a>
-      <a class="cart-link" href="#pedido" id="ir-pedido" hidden>Tu pedido <span class="badge" id="contador">0</span></a>
     </div>
   </header>
 
-  <main class="wrap grid">
-    <section id="tienda" aria-labelledby="t-catalogo">
-      <h1 id="t-catalogo">Catálogo de hoy</h1>
-      <p class="muted">Horneado esta mañana. Elige tus productos y recógelos en la panadería.</p>
-      <div class="chips" id="categorias" role="group" aria-label="Filtrar por categoría"></div>
-      <p id="estado-catalogo" class="muted" role="status">Cargando el catálogo</p>
-      <div id="catalogo" class="cards"></div>
+  <main id="principal">
+    <!-- Carrusel: la primera diapositiva está escrita aquí; las de combos las agrega inicio.js -->
+    <section class="promos" id="promos" aria-roledescription="carrusel" aria-label="Destacados">
+      <div class="envoltura">
+        <div class="promos-marco">
+          <div class="promos-pista" id="promos-pista">
+            <article class="promo activa" aria-roledescription="diapositiva" aria-label="1">
+              <img class="promo-foto" src="/img/sitio/portada.jpg" alt="" width="1536" height="864">
+              <div class="promo-txt">
+                <span class="promo-cat">Panadería</span>
+                <h2>Pan recién horneado, listo cuando llegues</h2>
+                <p>Haz tu pedido, elige la hora y recógelo sin hacer fila.</p>
+                <div class="promo-acciones">
+                  <a class="btn btn-rojo" href="/pedir">Hacer mi pedido</a>
+                  <span class="promo-precio">Pagas al recoger</span>
+                </div>
+              </div>
+            </article>
+          </div>
+          <button class="promos-flecha ant" id="promos-ant" type="button" aria-label="Destacado anterior" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <button class="promos-flecha sig" id="promos-sig" type="button" aria-label="Destacado siguiente" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+          <div class="promos-puntos" id="promos-puntos"></div>
+        </div>
+      </div>
     </section>
 
-    <aside class="panel" id="pedido" aria-labelledby="t-pedido">
-      <a class="volver" href="#tienda">← Seguir comprando</a>
-      <ol class="steps" id="pasos">
-        <li class="on">1. Productos</li>
-        <li>2. Datos y hora</li>
-        <li>3. Confirmación</li>
-      </ol>
-
-      <div id="vista-pedido">
-        <h2 id="t-pedido">Tu pedido</h2>
-        <div id="error" class="alert error" role="alert" hidden>
-          <strong>No pudimos registrar tu pedido</strong>
-          <span id="error-texto"></span>
+    <!-- Presentación -->
+    <section class="hero" aria-labelledby="hero-titulo">
+      <div class="envoltura hero-in">
+        <div>
+          <h1 id="hero-titulo">El pan del barrio, ahora también por encargo</h1>
+          <p class="hero-sub">Masa madre, pandebonos, almojábanas, hojaldres y tortas de la casa. Escoges en línea, te lo tenemos listo a la hora que digas y lo pagas aquí.</p>
+          <div class="hero-acciones">
+            <a class="btn btn-rojo" href="/pedir">Hacer mi pedido</a>
+            <a class="btn btn-borde" href="#mi-pedido">Consultar mi pedido</a>
+            <a class="btn btn-borde" href="#visitanos">Cómo llegar</a>
+          </div>
         </div>
-        <ul id="carrito" class="cart"></ul>
-        <p id="vacio" class="empty">Todavía no has agregado productos.<br>Usa <strong>Agregar</strong> en el catálogo.</p>
-        <p class="total">Total <strong id="total">$0</strong></p>
+        <p class="sello-mano" aria-hidden="true">¡Recién salido del horno!</p>
+      </div>
+    </section>
 
-        <form id="form" novalidate hidden>
-          <label>Nombre
-            <input id="nombre" name="nombre" autocomplete="name" required minlength="2" maxlength="80" placeholder="Tu nombre">
+    <!-- Productos -->
+    <section class="productos" id="productos" aria-labelledby="productos-titulo">
+      <div class="envoltura">
+        <div class="cab">
+          <h2 id="productos-titulo">Lo que hay hoy</h2>
+          <a class="btn btn-borde" href="/pedir">Ir a la tienda</a>
+        </div>
+        <div class="pestanas" id="pestanas" role="group" aria-label="Filtrar por categoría"></div>
+        <p class="estado" id="estado-productos" role="status">Cargando productos…</p>
+        <div class="rejilla" id="rejilla"></div>
+      </div>
+    </section>
+
+    <!-- Combos -->
+    <section class="seccion combos-sec" id="combos" aria-labelledby="combos-titulo" hidden>
+      <div class="envoltura">
+        <div class="cab">
+          <div>
+            <h2 id="combos-titulo">Combos</h2>
+            <p>Lo que más se lleva junto, a mejor precio.</p>
+          </div>
+        </div>
+        <div class="combos" id="lista-combos"></div>
+      </div>
+    </section>
+
+    <!-- Cifras -->
+    <section class="cifras" aria-label="Pan de la Casa en números">
+      <div class="envoltura">
+        <dl class="cifras-lista">
+          <div><dt>Abrimos</dt><dd>6:00 <small>a. m.</small></dd></div>
+          <div><dt>Productos hoy</dt><dd id="cifra-productos">10</dd></div>
+          <div><dt>Preparamos tu pedido en</dt><dd>30 <small>min</small></dd></div>
+          <div><dt>Pedidos con anticipación de</dt><dd>7 <small>días</small></dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- Cómo pedir -->
+    <section class="seccion" id="como-pedir" aria-labelledby="pasos-titulo">
+      <div class="envoltura">
+        <div class="cab">
+          <div>
+            <h2 id="pasos-titulo">Cómo pedir</h2>
+            <p>Sin crear cuenta y sin pagar en línea.</p>
+          </div>
+        </div>
+        <ol class="pasos">
+          <li><strong>Escoge en la tienda</strong><p>Agrega lo que vas a llevar y ajusta las cantidades. Ves el total antes de confirmar.</p></li>
+          <li><strong>Dinos a qué hora pasas</strong><p>Entre las 6:00 a. m. y las 8:00 p. m., hoy o hasta dentro de una semana.</p></li>
+          <li><strong>Recoge y paga aquí</strong><p>Te damos un número de pedido. Lo dices en el mostrador y pagas ahí mismo.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Estado del pedido -->
+    <section class="seccion seccion-alt" id="mi-pedido" aria-labelledby="consulta-titulo">
+      <div class="envoltura dos-col">
+        <div>
+          <h2 id="consulta-titulo">¿Cómo va mi pedido?</h2>
+          <p>Escribe el número que te dimos al confirmar y el teléfono con el que lo hiciste.</p>
+          <form id="form-consulta" class="caja" novalidate>
+            <div id="error-consulta" class="aviso aviso-error" role="alert" hidden></div>
+            <label>Número de pedido
+              <input id="consulta-numero" autocomplete="off" required minlength="6" maxlength="20" placeholder="Ej. 7c2e9a41f0">
+            </label>
+            <label>Teléfono
+              <input id="consulta-telefono" inputmode="numeric" autocomplete="tel" required pattern="[0-9]{7,10}" placeholder="3001234567">
+            </label>
+            <button class="btn btn-rojo btn-ancho" type="submit" id="consultar">Consultar</button>
+          </form>
+        </div>
+        <div class="caja resultado" id="resultado" aria-live="polite">
+          <p class="resultado-vacio">Aquí vas a ver si tu pedido ya está listo.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visítanos -->
+    <section class="seccion" id="visitanos" aria-labelledby="visita-titulo">
+      <div class="envoltura visita">
+        <img class="visita-foto" src="/img/sitio/fachada.jpg" alt="Fachada de la panadería Pan de la Casa" width="1000" height="667" loading="lazy">
+        <div>
+          <h2 id="visita-titulo">Visítanos</h2>
+          <p class="visita-dir" id="direccion"></p>
+          <dl class="horario" id="horario"></dl>
+          <p class="nota">Los pedidos hechos en línea se entregan en el mostrador de la entrada, sin pasar por la fila de caja.</p>
+          <a class="btn btn-borde" id="como-llegar" href="#" target="_blank" rel="noopener">Abrir en Google Maps</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Preguntas frecuentes -->
+    <section class="seccion seccion-alt" id="preguntas" aria-labelledby="faq-titulo">
+      <div class="envoltura angosta">
+        <h2 id="faq-titulo">Preguntas frecuentes</h2>
+        <div class="faq">
+          <details><summary>¿Tengo que crear una cuenta para pedir?</summary><p>No. Solo te pedimos tu nombre y un teléfono para identificar el pedido cuando llegues.</p></details>
+          <details><summary>¿Cómo pago?</summary><p>Pagas al recoger, en la panadería. En la página no se hace ningún pago.</p></details>
+          <details><summary>¿Con cuánto tiempo tengo que pedir?</summary><p>Mínimo 30 minutos antes de la hora en que vas a pasar, y hasta con siete días de anticipación.</p></details>
+          <details><summary>¿Qué pasa si un producto se agota?</summary><p>La tienda solo deja pedir lo que hay. Si mientras pedías alguien se llevó las últimas unidades, te avisamos antes de confirmar y no se registra nada.</p></details>
+          <details><summary>¿Puedo cambiar o cancelar un pedido?</summary><p>Escríbenos desde Contacto con el número del pedido. Lo podemos cancelar mientras no lo hayas recogido.</p></details>
+          <details><summary>¿Hacen encargos grandes o tortas para eventos?</summary><p>Sí. Cuéntanos qué necesitas en Contacto, idealmente con dos días de anticipación.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contacto -->
+    <section class="seccion" id="contacto" aria-labelledby="contacto-titulo">
+      <div class="envoltura dos-col">
+        <div>
+          <h2 id="contacto-titulo">Escríbenos</h2>
+          <p>Para encargos, cambios en un pedido o lo que quieras preguntar. Te contestamos por el teléfono o el correo que nos dejes.</p>
+          <p class="firma-mano" aria-hidden="true">Gracias por preferir el pan del barrio</p>
+        </div>
+        <form id="form-contacto" class="caja" novalidate>
+          <div id="error-contacto" class="aviso aviso-error" role="alert" hidden></div>
+          <div id="ok-contacto" class="aviso aviso-ok" role="status" hidden></div>
+          <label>Nombre <input id="contacto-nombre" autocomplete="name" required minlength="2" maxlength="80"></label>
+          <label>Teléfono o correo <input id="contacto-medio" autocomplete="tel" required minlength="5" maxlength="120"></label>
+          <label>¿Sobre qué es?
+            <select id="contacto-asunto">
+              <option value="encargo">Un encargo</option>
+              <option value="pedido">Un pedido que ya hice</option>
+              <option value="sugerencia">Una sugerencia</option>
+              <option value="otro">Otra cosa</option>
+            </select>
           </label>
-          <label>Teléfono
-            <input id="telefono" name="telefono" inputmode="numeric" autocomplete="tel" required pattern="[0-9]{7,10}" placeholder="3001234567">
-          </label>
-          <label>Día de recogida
-            <select id="dia" name="dia"></select>
-          </label>
-          <fieldset>
-            <legend>Hora de recogida</legend>
-            <div class="slots" id="horas"></div>
-          </fieldset>
-          <p class="hint">Entregamos entre las 6:00 y las 20:00. Necesitamos 30 minutos para preparar el pedido.</p>
-          <button id="enviar" class="full" type="submit">Confirmar pedido</button>
-          <p class="hint pago">Pagas al recoger en la panadería.</p>
+          <label>Mensaje <textarea id="contacto-mensaje" rows="4" required minlength="5" maxlength="1000"></textarea></label>
+          <label class="trampa" aria-hidden="true">Sitio web <input id="contacto-sitio" tabindex="-1" autocomplete="off"></label>
+          <button class="btn btn-rojo btn-ancho" type="submit" id="enviar-contacto">Enviar mensaje</button>
         </form>
       </div>
-
-      <div id="vista-confirmacion" class="done" hidden>
-        <div class="check" aria-hidden="true">✓</div>
-        <h2>¡Pedido recibido!</h2>
-        <p class="muted">Número de pedido <span class="code" id="conf-id"></span></p>
-        <p>Te esperamos <strong id="conf-hora"></strong><br>en Pan de la Casa.</p>
-        <div class="resumen" id="conf-resumen"></div>
-        <p class="muted">Guarda este número y muéstralo al recoger. El pago se hace en la panadería.</p>
-        <button id="otro" class="full line" type="button">Hacer otro pedido</button>
-      </div>
-    </aside>
+    </section>
   </main>
 
-  <div class="bar" id="barra" hidden>
-    <button type="button" id="ver-pedido"><span id="barra-texto">Ver pedido</span><span id="barra-total"></span></button>
-  </div>
-
-  <footer class="wrap foot">
-    <span>Solo guardamos tu nombre y tu teléfono para entregar el pedido.</span>
-    <span id="version"></span>
+  <footer class="pie">
+    <div class="envoltura pie-in">
+      <a class="marca" href="/" aria-label="Pan de la Casa, ir al inicio">
+        <img src="/img/sitio/logo.svg" alt="" width="44" height="44">
+        <span class="marca-txt">Pan de la Casa<small>Panadería de barrio</small></span>
+      </a>
+      <nav aria-label="Pie de página">
+        <a href="/pedir">Hacer pedido</a>
+        <a href="#mi-pedido">Mi pedido</a>
+        <a href="#visitanos">Visítanos</a>
+        <a href="#preguntas">Preguntas</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+      <p class="pie-nota">Solo guardamos tu nombre y tu teléfono para entregarte el pedido. <span id="version"></span></p>
+    </div>
   </footer>
-  <script src="/app.js"></script>
+
+  <a class="flotante" href="/pedir" aria-label="Hacer pedido">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.3 11h10.8l2.2-8H6.6"/><circle cx="9.5" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>
+    <span>Pedir</span>
+  </a>
+
+  <script src="/inicio.js"></script>
 </body>
 </html>

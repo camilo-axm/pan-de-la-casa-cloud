@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pan de la Casa · Pedidos para recoger</title>
+  <link rel="icon" type="image/svg+xml" href="/img/sitio/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Saira:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="tienda oscuro">
+  <header class="top">
+    <div class="wrap top-in">
+      <a class="marca-link" href="/" aria-label="Pan de la Casa, ir al inicio">
+        <img class="logo" src="/img/sitio/logo.svg" alt="" width="46" height="46">
+        <span><span class="brand">Pan de la Casa</span><span class="tag">Pide en línea y recoge en la panadería</span></span>
+      </a>
+      <nav class="nav-tienda" aria-label="Sitio">
+        <a class="link" href="/">Inicio</a>
+        <a class="link" href="/#mi-pedido">Consultar mi pedido</a>
+      </nav>
+      <a class="cart-link" href="#pedido" id="ir-pedido" hidden>Tu pedido <span class="badge" id="contador">0</span></a>
+    </div>
+  </header>
+
+  <main class="wrap grid">
+    <section id="tienda" aria-labelledby="t-catalogo">
+      <h1 id="t-catalogo">Catálogo de hoy</h1>
+      <p class="muted">Horneado esta mañana. Elige tus productos y recógelos en la panadería.</p>
+      <div class="chips" id="categorias" role="group" aria-label="Filtrar por categoría"></div>
+      <p id="estado-catalogo" class="muted" role="status">Cargando el catálogo</p>
+      <div id="catalogo" class="cards"></div>
+    </section>
+
+    <aside class="panel" id="pedido" aria-labelledby="t-pedido">
+      <a class="volver" href="#tienda">← Seguir comprando</a>
+      <ol class="steps" id="pasos">
+        <li class="on">1. Productos</li>
+        <li>2. Datos y hora</li>
+        <li>3. Confirmación</li>
+      </ol>
+
+      <div id="vista-pedido">
+        <h2 id="t-pedido">Tu pedido</h2>
+        <div id="error" class="alert error" role="alert" hidden>
+          <strong>No pudimos registrar tu pedido</strong>
+          <span id="error-texto"></span>
+        </div>
+        <ul id="carrito" class="cart"></ul>
+        <p id="vacio" class="empty">Todavía no has agregado productos.<br>Usa <strong>Agregar</strong> en el catálogo.</p>
+        <p class="total">Total <strong id="total">$0</strong></p>
+
+        <form id="form" novalidate hidden>
+          <label>Nombre
+            <input id="nombre" name="nombre" autocomplete="name" required minlength="2" maxlength="80" placeholder="Tu nombre">
+          </label>
+          <label>Teléfono
+            <input id="telefono" name="telefono" inputmode="numeric" autocomplete="tel" required pattern="[0-9]{7,10}" placeholder="3001234567">
+          </label>
+          <label>Día de recogida
+            <select id="dia" name="dia"></select>
+          </label>
+          <fieldset>
+            <legend>Hora de recogida</legend>
+            <div class="slots" id="horas"></div>
+          </fieldset>
+          <p class="hint">Entregamos entre las 6:00 y las 20:00. Necesitamos 30 minutos para preparar el pedido.</p>
+          <button id="enviar" class="full" type="submit">Confirmar pedido</button>
+          <p class="hint pago">Pagas al recoger en la panadería.</p>
+        </form>
+      </div>
+
+      <div id="vista-confirmacion" class="done" hidden>
+        <div class="check" aria-hidden="true">✓</div>
+        <h2>¡Pedido recibido!</h2>
+        <p class="muted">Número de pedido <span class="code" id="conf-id"></span></p>
+        <p>Te esperamos <strong id="conf-hora"></strong><br>en Pan de la Casa.</p>
+        <div class="resumen" id="conf-resumen"></div>
+        <p class="muted">Guarda este número y muéstralo al recoger. El pago se hace en la panadería.</p>
+        <p><a class="link-marca" id="conf-consulta" href="/#mi-pedido">Ver cómo va mi pedido</a></p>
+        <button id="otro" class="full line" type="button">Hacer otro pedido</button>
+      </div>
+    </aside>
+  </main>
+
+  <div class="bar" id="barra" hidden>
+    <button type="button" id="ver-pedido"><span id="barra-texto">Ver pedido</span><span id="barra-total"></span></button>
+  </div>
+
+  <footer class="wrap foot">
+    <span>Solo guardamos tu nombre y tu teléfono para entregar el pedido.</span>
+    <span id="version"></span>
+  </footer>
+  <script src="/app.js"></script>
+</body>
+</html>
