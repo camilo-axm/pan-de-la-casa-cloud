@@ -1,13 +1,33 @@
 # Pan de la Casa
 
-Proyecto final de PENU_M 2026-2 en la Escuela Colombiana de Ingeniería Julio Garavito, "Arquitectura cloud para una PyME", con el caso de la panadería Pan de la Casa.
+**Arquitectura cloud para una PyME.** Proyecto final de PENU_M 2026-2, Escuela Colombiana de Ingeniería Julio Garavito.
 
-| Integrante | Usuario de GitHub |
+| Rol | Nombre | GitHub |
+| --- | --- | --- |
+| Integrante | Camilo Aguirre | [camilo-axm](https://github.com/camilo-axm) |
+| Integrante | Mateo Alejandro Sánchez Buitrago | [NiupiMateo](https://github.com/NiupiMateo) |
+| Docente | Luis Carlos Galvis Espitia | |
+
+## Introducción
+
+Pan de la Casa es una panadería de barrio con una sede. Hoy recibe los pedidos en el mostrador y por teléfono, y los fines de semana la demanda se triplica y la fila crece. No tiene personal de sistemas y puede gastar como máximo USD 150 al mes en la nube.
+
+En este proyecto actuamos como su equipo de arquitectura. Diseñamos una plataforma de pedidos para recoger en Microsoft Azure y la desplegamos como un MVP desde GitHub Actions, sin pasos manuales. El cliente consulta el catálogo con fotos y precios, arma su pedido, elige la hora de recogida y después consulta en qué paso va. El personal entra a un panel con su propio usuario y, según su rol, atiende los pedidos, mantiene el catálogo y el inventario del día, revisa los reportes de ventas y lee los mensajes de los clientes.
+
+El repositorio reúne las seis partes que pide el proyecto.
+
+| Parte | Dónde está |
 | --- | --- |
-| Camilo Aguirre | [camilo-axm](https://github.com/camilo-axm) |
-| Mateo Alejandro Sánchez Buitrago | [NiupiMateo](https://github.com/NiupiMateo) |
+| Diseño de alto nivel (HLD) con sus decisiones de arquitectura | [docs/arquitectura](docs/arquitectura) |
+| Diagramas de contexto, arquitectura cloud, red y seguridad, y pipeline | [docs/diagramas](docs/diagramas) |
+| Estimación de costos y optimizaciones FinOps | [docs/costos](docs/costos) |
+| Diseño del proceso de despliegue | [docs/despliegue](docs/despliegue) |
+| MVP, infraestructura en Terraform y workflows de GitHub Actions | `app`, `infra` y `.github/workflows` |
+| Presentación de la sustentación | [docs/sustentacion](docs/sustentacion) |
 
-Docente: Luis Carlos Galvis Espitia.
+El MVP está publicado en [ca-panaderia-dev.ambitiousforest-9b0e1418.mexicocentral.azurecontainerapps.io](https://ca-panaderia-dev.ambitiousforest-9b0e1418.mexicocentral.azurecontainerapps.io). Las secciones siguientes explican cómo ejecutarlo en un equipo, sus reglas de negocio, su arquitectura y su despliegue.
+
+## Qué hace la aplicación
 
 Sitio web de la panadería con una página de inicio, una tienda para registrar pedidos para recoger y una consulta del estado del pedido. El personal entra a un panel aparte con su correo y contraseña. Desde ahí atiende los pedidos, administra el catálogo (precios, unidades, agotados y combos), consulta reportes por período y, en el caso del dueño, gestiona los usuarios y sus roles.
 
