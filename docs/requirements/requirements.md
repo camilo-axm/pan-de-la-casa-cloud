@@ -1,6 +1,6 @@
 # Requerimientos y casos de uso de Pan de la Casa
 
-El MVP permite consultar el catálogo de la panadería, registrar pedidos para recoger y gestionar su estado desde el panel de administración. La tienda y el panel se describen según el alcance previsto. Su validación en navegador queda pendiente hasta integrar el frontend.
+El MVP permite consultar el catálogo de la panadería y registrar pedidos para recoger. El personal entra a un panel aparte con correo y contraseña. Desde ahí atiende los pedidos, administra el catálogo y consulta reportes. El dueño, además, gestiona los usuarios y sus roles.
 
 ## 1. Lista general de requerimientos
 
@@ -11,21 +11,43 @@ El sistema de pan de la casa debe tener la capacidad de:
 1. La tienda debe mostrar los productos disponibles con nombre, descripción, categoría, precio e imagen. 
 2. El cliente debe poder seleccionar productos, ajustar cantidades y revisar el resumen antes de enviar el pedido.
 3. El sistema debe recibir el nombre, el teléfono y la hora de recogida, validar el pedido, calcular el total con los precios del catálogo y devolver un identificador de confirmación.
-4. El administrador debe poder ingresar su clave para consultar y actualizar pedidos. El panel debe informar si la clave fue rechazada
-5. El sistema debe mostrar al administrador autorizado los pedidos recientes, del más nuevo al más antiguo, con sus productos, hora de recogida y estado. Los pedidos marcados como prueba se excluyen de la consulta predeterminada.
-6. El administrador debe poder cambiar el estado de un pedido a `recibido`, `listo`, `entregado` o `cancelado` y consultar el estado guardado.
+4. El personal debe ingresar al panel con su correo y su contraseña. El panel no se enlaza desde la tienda y debe informar si las credenciales fueron rechazadas.
+5. El sistema debe mostrar al personal autorizado los pedidos, ordenados por hora de recogida, con sus productos, cliente, total y estado. Los pedidos marcados como prueba se excluyen de la consulta predeterminada.
+6. El personal debe poder avanzar un pedido solo por el flujo `recibido` → `listo` → `entregado`, o cancelarlo antes de entregarlo. Cada cambio queda registrado con la hora y la persona que lo hizo.
+7. El dueño y los administradores deben poder editar el catálogo: crear productos, cambiar precio, descripción, categoría y foto, ajustar las unidades disponibles, marcar un producto como agotado y ocultarlo o mostrarlo en la tienda.
+8. El dueño y los administradores deben poder crear y ajustar combos formados por productos del catálogo. Un combo consume las unidades de sus productos.
+9. El dueño y los administradores deben poder consultar un reporte por día, semana, mes, año o rango de fechas, con la cantidad de pedidos y el dinero por estado, las ventas entregadas, el valor promedio por pedido y los productos más vendidos.
+10. El dueño debe poder crear usuarios con rol de administrador o empleado, cambiar su rol, desactivarlos y asignarles una contraseña nueva. Cada persona puede cambiar su propia contraseña.
+11. El dueño y los administradores deben poder eliminar productos y combos del catálogo. Un producto que hace parte de un combo no se elimina hasta quitarlo del combo, y los pedidos ya registrados conservan su detalle.
+12. El sitio debe tener una página de inicio con la presentación de la panadería y accesos a los productos, al pedido, a la consulta del estado del pedido, a la ubicación y al contacto.
+13. El cliente debe poder consultar el estado de su pedido con el número de pedido y su teléfono, sin iniciar sesión.
+14. El cliente debe poder enviar un mensaje desde la sección de contacto. El dueño y los administradores lo leen en el panel.
 
 
 ### 1.2 Requerimientos no funcionales
 
 El sistema de pan de la casa debe tener:
 
-1. La API debe exigir la clave administrativa mediante `X-Admin-Key` al listar pedidos o modificar su estado. Debe responder con HTTP `401` si la clave falta o es incorrecta. La clave real se configura fuera del control de versiones
+1. Las rutas del personal deben exigir un token de sesión vigente y el rol adecuado. Responden HTTP `401` sin sesión y `403` si el rol no alcanza. Las contraseñas se guardan con hash scrypt, la sesión vence a las 8 horas y la cuenta se bloquea 15 minutos tras 5 intentos fallidos. La contraseña inicial del dueño se configura fuera del control de versiones.
 2. El catálogo, la revisión y la confirmación deben poder usarse en escritorio y en móvil. Los mensajes de validación deben indicar el dato o la condición que impide registrar el pedido.
 3. Los pedidos deben seguir disponibles al reiniciar MongoDB mientras se conserve el volumen de datos.
 4. La API y MongoDB deben poder iniciarse con `docker compose up --build` usando la configuración local documentada.
 5. El servicio debe exponer `/healthz` para comprobar el proceso y `/readyz` para comprobar la conexión a MongoDB. El registro de las solicitudes de negocio debe incluir método, ruta, código HTTP y duración.
-6. El proyecto debe incluir pruebas automatizadas del catálogo, la creación de pedidos y las operaciones administrativas. La suite completa debe pasar antes de fusionar el MVP a `develop`.
+6. El proyecto debe incluir pruebas automatizadas del catálogo, la creación de pedidos, el flujo de estados, el inventario, los reportes, los roles y las operaciones administrativas. La suite completa debe pasar antes de fusionar el MVP a `develop`.
+7. Registrar un pedido debe descontar las unidades de forma atómica: si una parte no alcanza, no se descuenta nada y el cliente recibe el motivo.
+
+### 1.3 Requerimientos no funcionales del enunciado
+
+El enunciado fija seis requisitos no funcionales para cualquier caso. Así los cubre la arquitectura:
+
+| Requisito | Meta | Cómo se cumple |
+| --- | --- | --- |
+| Presupuesto | Máximo USD 150 al mes en producción | Estimación de producción de USD 25,85 al mes y de USD 46,80 en alta demanda, con alerta de presupuesto en Azure. |
+| Disponibilidad | 99,5 % en horario comercial | Container Apps y Cosmos DB con SLA de 99,9 % o más, y comprobaciones `/healthz` y `/readyz` para que la plataforma reemplace réplicas con problemas. |
+| Seguridad | HTTPS, secretos fuera del código y mínimo privilegio | Solo HTTPS en el ingreso, secretos en Key Vault leídos por una identidad administrada, despliegue con OIDC sin secretos guardados, roles RBAC acotados y roles propios en el panel. |
+| Respaldo | RPO 24 h y RTO 4 h | Respaldo continuo de Cosmos DB con restauración a un punto en el tiempo de hasta 7 días, y recreación de la infraestructura con Terraform desde el pipeline. |
+| Escalabilidad | Soportar 3 veces la carga en temporada alta | Container Apps escala por solicitudes HTTP y Cosmos DB tiene autoescalado de rendimiento. |
+| Observabilidad | Logs centralizados, métricas y al menos una alerta | Cada solicitud deja una línea JSON en Log Analytics con ruta, código y duración. Métricas de Container Apps y alertas de errores y de presupuesto en Azure Monitor. |
 
 ## 2. Casos de uso
 
@@ -72,11 +94,11 @@ El sistema de pan de la casa debe tener:
 | --- | --- |
 | **Requerimiento asociado** | RF-04 |
 | **Actor** | Administrador |
-| **Precondiciones** | El panel está disponible y el administrador conoce la clave configurada. |
-| **Flujo principal** | 1. El administrador abre el panel e ingresa la clave.<br>2. El panel envía una solicitud de consulta con el encabezado `X-Admin-Key`.<br>3. La API verifica la clave y autoriza la consulta.<br>4. El panel presenta el listado. |
-| **Flujo alternativo** | Si la API devuelve HTTP `401`, el panel indica que la clave fue rechazada y permite volver a ingresarla. |
+| **Precondiciones** | La persona tiene una cuenta activa creada por el dueño, o es el dueño. |
+| **Flujo principal** | 1. La persona abre `/admin` e ingresa su correo y su contraseña.<br>2. La API verifica la contraseña contra su hash y crea una sesión de 8 horas.<br>3. El panel muestra solo las secciones que permite su rol. |
+| **Flujo alternativo** | Si las credenciales son incorrectas, el panel lo indica sin revelar cuál dato falló. Tras 5 intentos fallidos la cuenta se bloquea 15 minutos. Una cuenta desactivada no puede entrar. |
 | **Diagrama de caso de uso** |<img width="847" height="238" alt="image" src="https://github.com/user-attachments/assets/5daf7918-89ef-430d-9d0b-9d6f52543545" />|
-| **Poscondiciones** | El administrador puede usar el panel con la clave válida. La API verifica la clave en cada solicitud administrativa. |
+| **Poscondiciones** | La persona usa el panel con su sesión. La API verifica la sesión y el rol en cada solicitud. |
 
 ### 2.5 CU-05 · Consultar los pedidos
 
@@ -97,8 +119,40 @@ El sistema de pan de la casa debe tener:
 | **Requerimiento asociado** | RF-06 |
 | **Actor** | Administrador |
 | **Precondiciones** | El administrador tiene una clave válida y puede seleccionar un pedido del listado. |
-| **Flujo principal** | 1. El administrador selecciona un pedido y el nuevo estado.<br>2. El panel envía el identificador, el estado y la clave a la API.<br>3. La API valida el estado y guarda el cambio.<br>4. El panel muestra el estado que devuelve la API. |
-| **Flujo alternativo** | Si el pedido ya no existe, la API devuelve HTTP `404`. Si el estado es inválido, devuelve HTTP `422`. El panel informa el error y conserva el estado anterior. |
+| **Flujo principal** | 1. El panel muestra en cada pedido solo las acciones permitidas: *Marcar listo*, *Entregar* o *Cancelar*.<br>2. La persona elige una acción y confirma la entrega o la cancelación.<br>3. La API comprueba que el paso respete el flujo, guarda el cambio y lo agrega al historial.<br>4. Si el pedido se cancela, las unidades vuelven al inventario. |
+| **Flujo alternativo** | Si el pedido ya no existe, la API devuelve HTTP `404`. Si el paso salta o retrocede en el flujo, o si otra persona cambió el pedido al mismo tiempo, devuelve HTTP `409`. El panel informa el motivo y recarga la lista. |
 | **Diagrama de caso de uso** |<<img width="862" height="295" alt="image" src="https://github.com/user-attachments/assets/d6bbb227-5fa4-48ee-855c-ff958db9ecd9" />|
 | **Poscondiciones** | El nuevo estado queda guardado y aparece en las próximas consultas. |
 
+### 2.7 CU-07 · Gestionar el catálogo y los combos
+
+| Campo | Descripción |
+| --- | --- |
+| **Requerimiento asociado** | RF-07, RF-08 |
+| **Actor** | Dueño o administrador |
+| **Precondiciones** | La persona inició sesión con uno de esos roles. |
+| **Flujo principal** | 1. Abre la sección Catálogo.<br>2. Ajusta las unidades, marca un producto como agotado, lo oculta o lo edita.<br>3. Para un combo, elige los productos que incluye y sus cantidades.<br>4. La API valida los datos y guarda el cambio. La tienda lo refleja en la siguiente consulta. |
+| **Flujo alternativo** | Un combo con menos de dos productos, con productos repetidos o que incluye otro combo se rechaza con HTTP `422`. |
+| **Poscondiciones** | El catálogo de la tienda muestra los precios, existencias y combos actualizados. |
+
+### 2.8 CU-08 · Consultar el reporte de un período
+
+| Campo | Descripción |
+| --- | --- |
+| **Requerimiento asociado** | RF-09 |
+| **Actor** | Dueño o administrador |
+| **Precondiciones** | La persona inició sesión con uno de esos roles. |
+| **Flujo principal** | 1. Abre la sección Reportes.<br>2. Elige hoy, esta semana, este mes, este año o un rango de fechas.<br>3. El panel muestra pedidos y dinero por estado, ventas entregadas, valor promedio por pedido, productos más vendidos y la gráfica de ventas por día o por mes. |
+| **Flujo alternativo** | Si la fecha final es anterior a la inicial o el rango supera un año, la API responde HTTP `422`. |
+| **Poscondiciones** | La persona conoce el resultado del período elegido. |
+
+### 2.9 CU-09 · Gestionar usuarios y roles
+
+| Campo | Descripción |
+| --- | --- |
+| **Requerimiento asociado** | RF-10 |
+| **Actor** | Dueño |
+| **Precondiciones** | El dueño inició sesión. |
+| **Flujo principal** | 1. Abre la sección Usuarios.<br>2. Crea una persona con nombre, correo, rol y contraseña inicial, o cambia el rol, desactiva o asigna una contraseña nueva a alguien existente.<br>3. La API guarda el cambio y cierra las sesiones abiertas de esa persona cuando cambia su rol, su contraseña o su estado. |
+| **Flujo alternativo** | Un correo repetido se rechaza con HTTP `409`. La cuenta del dueño no se modifica desde esta sección, y no se puede crear un segundo dueño. |
+| **Poscondiciones** | Cada persona ve en el panel solo lo que permite su rol. |

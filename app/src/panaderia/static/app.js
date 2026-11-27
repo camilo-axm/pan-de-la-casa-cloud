@@ -26,7 +26,7 @@ function el(tag, attrs = {}, text = "") {
 
 function pintarCategorias() {
   // Orden de la vitrina; una categoría nueva en el catálogo aparece al final.
-  const ORDEN = ["Panes", "Hojaldres", "Tradicionales", "Repostería"];
+  const ORDEN = ["Panes", "Hojaldres", "Tradicionales", "Salados", "Repostería", "Combos"];
   const posicion = (c) => (ORDEN.includes(c) ? ORDEN.indexOf(c) : ORDEN.length);
   const nombres = ["Todos", ...[...new Set(productos.map((p) => p.categoria))].sort((a, b) => posicion(a) - posicion(b))];
   $("categorias").replaceChildren(...nombres.map((c) => {
@@ -36,29 +36,67 @@ function pintarCategorias() {
   }));
 }
 
+/* Existencias: un combo consume unidades de sus productos, así que se revisa el pedido completo. */
+
+function consumo(pedido) {
+  const usado = new Map();
+  pedido.forEach((n, id) => {
+    const p = productos.find((x) => x.id === id);
+    if (!p) return;
+    const partes = p.tipo === "combo" ? p.incluye.map((c) => [c.producto_id, c.cantidad]) : [[p.id, 1]];
+    partes.forEach(([base, cantidad]) => usado.set(base, (usado.get(base) || 0) + n * cantidad));
+  });
+  return usado;
+}
+
+function cabe(id, n) {
+  if (n > 50) return false;
+  const prueba = new Map(carrito);
+  prueba.set(id, n);
+  for (const [base, usado] of consumo(prueba)) {
+    const p = productos.find((x) => x.id === base);
+    if (p && p.maximo !== null && usado > p.maximo) return false;
+  }
+  return true;
+}
+
 function accion(p) {
   const n = carrito.get(p.id) || 0;
+  if (p.agotado) return el("span", { class: "agotado" }, "Agotado");
   if (!n) {
     const btn = el("button", { type: "button" }, "Agregar");
+    btn.disabled = !cabe(p.id, 1);
     btn.addEventListener("click", () => cambiar(p.id, 1));
     return btn;
   }
   const qty = el("span", { class: "qty" });
   const menos = el("button", { type: "button", "aria-label": `Quitar un ${p.nombre}` }, "−");
   const mas = el("button", { type: "button", "aria-label": `Agregar otro ${p.nombre}` }, "+");
+  mas.disabled = !cabe(p.id, n + 1);
+  if (mas.disabled) mas.title = "No hay más unidades disponibles";
   menos.addEventListener("click", () => cambiar(p.id, -1));
   mas.addEventListener("click", () => cambiar(p.id, 1));
   qty.append(menos, el("output", { "aria-label": `Cantidad de ${p.nombre}` }, String(n)), mas);
   return qty;
 }
 
+function quedan(p) {
+  if (p.agotado || p.maximo === null || p.maximo > 5) return null;
+  return el("p", { class: "quedan" }, p.maximo === 1 ? "Queda 1" : `Quedan ${p.maximo}`);
+}
+
 function pintarCatalogo() {
   const visibles = productos.filter((p) => categoria === "Todos" || p.categoria === categoria);
   $("catalogo").replaceChildren(...visibles.map((p) => {
-    const card = el("article", { class: "card" });
+    const card = el("article", { class: p.agotado ? "card sin-stock" : "card" });
     card.append(el("img", { src: p.foto, alt: p.nombre, width: 240, height: 160, loading: "lazy" }));
     const body = el("div", { class: "card-body" });
     body.append(el("p", { class: "cat" }, p.categoria), el("h3", {}, p.nombre), el("p", { class: "desc" }, p.descripcion));
+    if (p.tipo === "combo") {
+      body.append(el("p", { class: "incluye" }, "Incluye " + p.incluye.map((c) => `${c.cantidad} ${c.nombre}`).join(", ")));
+    }
+    const aviso = quedan(p);
+    if (aviso) body.append(aviso);
     const row = el("div", { class: "row" });
     row.append(el("span", { class: "precio" }, pesos(p.precio)), accion(p));
     body.append(row);
@@ -70,7 +108,8 @@ function pintarCatalogo() {
 /* ---------- Pedido ---------- */
 
 function cambiar(id, delta) {
-  const n = Math.min(50, (carrito.get(id) || 0) + delta);
+  const n = (carrito.get(id) || 0) + delta;
+  if (delta > 0 && !cabe(id, n)) return;
   if (n <= 0) carrito.delete(id); else carrito.set(id, n);
   $("error").hidden = true;
   pintarCatalogo();
@@ -95,6 +134,7 @@ function pintarPedido() {
     const menos = el("button", { type: "button", "aria-label": `Quitar un ${p.nombre}` }, "−");
     const mas = el("button", { type: "button", "aria-label": `Agregar otro ${p.nombre}` }, "+");
     menos.addEventListener("click", () => cambiar(p.id, -1));
+    mas.disabled = !cabe(p.id, n + 1);
     mas.addEventListener("click", () => cambiar(p.id, 1));
     ctrl.append(menos, document.createTextNode(String(n)), mas);
     li.append(el("span", { class: "nom" }, p.nombre), ctrl, el("span", { class: "sub" }, pesos(subtotal)));
@@ -103,7 +143,9 @@ function pintarPedido() {
 
   const hay = items.length > 0;
   $("vacio").hidden = hay;
+  const formularioOculto = $("form").hidden;
   $("form").hidden = !hay;
+  if (hay && formularioOculto) mostrarHoraElegida();
   $("total").textContent = pesos(total);
   $("enviar").textContent = `Confirmar pedido · ${pesos(total)}`;
   marcarPaso(hay ? 1 : 0);
@@ -161,6 +203,14 @@ function pintarDias() {
   pintarHoras();
 }
 
+// Deja visible la hora elegida dentro de la lista, sin mover el resto de la página.
+function mostrarHoraElegida() {
+  const lista = $("horas");
+  const elegida = lista.querySelector('[aria-pressed="true"]');
+  if (!elegida || lista.offsetParent === null) return;
+  lista.scrollTop += elegida.getBoundingClientRect().top - lista.getBoundingClientRect().top - 6;
+}
+
 function pintarHoras() {
   const fecha = new Date($("dia").value + "T00:00:00Z");
   const lista = franjas(fecha);
@@ -175,6 +225,7 @@ function pintarHoras() {
     b.addEventListener("click", () => { horaElegida = { dia: $("dia").value, minutos: f.minutos }; pintarHoras(); });
     return b;
   }));
+  mostrarHoraElegida();
 }
 
 function horaRecogida() {
@@ -230,7 +281,11 @@ async function enviar(evento) {
       }),
     });
     const data = await r.json().catch(() => ({}));
-    if (!r.ok) return mostrarError(explicar(data.detail));
+    if (!r.ok) {
+      // Si alguien compró primero, se actualizan las existencias que ve el cliente.
+      if (r.status === 409) await cargarCatalogo();
+      return mostrarError(explicar(data.detail));
+    }
     confirmar(data);
   } catch {
     mostrarError("Revisa tu conexión e inténtalo de nuevo. Tu pedido sigue guardado en esta página.");
@@ -245,6 +300,7 @@ function confirmar(pedido) {
   const dia = `${parte({ weekday: "long" })} ${parte({ day: "numeric" })} de ${parte({ month: "long" })}`;
   const horaTexto = hora.toLocaleTimeString("es-CO", { timeZone: "America/Bogota", hour: "numeric", minute: "2-digit" });
   $("conf-id").textContent = pedido.id;
+  $("conf-consulta").href = `/?pedido=${encodeURIComponent(pedido.id)}#mi-pedido`;
   $("conf-hora").textContent = `el ${dia} a las ${horaTexto}`;
   const filas = pedido.items.map((i) => {
     const p = el("p");
@@ -256,7 +312,7 @@ function confirmar(pedido) {
   $("conf-resumen").replaceChildren(...filas, tot);
 
   carrito.clear();
-  pintarCatalogo();
+  cargarCatalogo();
   pintarPedido();
   $("vista-pedido").hidden = true;
   $("vista-confirmacion").hidden = false;
@@ -274,6 +330,27 @@ function otroPedido() {
 
 /* ---------- Inicio ---------- */
 
+async function cargarCatalogo() {
+  try {
+    const r = await fetch("/api/productos");
+    if (!r.ok) throw new Error(String(r.status));
+    productos = await r.json();
+    // Quita del pedido lo que ya no está en el catálogo o lo deja dentro de lo disponible.
+    [...carrito.keys()].forEach((id) => {
+      const p = productos.find((x) => x.id === id);
+      if (!p || p.agotado) carrito.delete(id);
+    });
+    $("estado-catalogo").hidden = productos.length > 0;
+    if (!productos.length) $("estado-catalogo").textContent = "Hoy no hay productos disponibles. Vuelve más tarde.";
+    pintarCategorias();
+    pintarCatalogo();
+    pintarPedido();
+  } catch {
+    $("estado-catalogo").hidden = false;
+    $("estado-catalogo").textContent = "No pudimos cargar el catálogo. Recarga la página en un momento.";
+  }
+}
+
 async function iniciar() {
   $("form").addEventListener("submit", enviar);
   $("dia").addEventListener("change", pintarHoras);
@@ -286,16 +363,7 @@ async function iniciar() {
     $("version").textContent = `${i.ambiente} · versión ${String(i.version).slice(0, 7)}`;
   }).catch(() => {});
 
-  try {
-    const r = await fetch("/api/productos");
-    if (!r.ok) throw new Error(String(r.status));
-    productos = await r.json();
-    $("estado-catalogo").hidden = true;
-    pintarCategorias();
-    pintarCatalogo();
-  } catch {
-    $("estado-catalogo").textContent = "No pudimos cargar el catálogo. Recarga la página en un momento.";
-  }
+  await cargarCatalogo();
 }
 
 iniciar();
