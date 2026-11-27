@@ -365,4 +365,9 @@ async function iniciar() {
   await cargarCatalogo();
 }
 
+// La versión ayuda a comprobar en la demo que el pipeline desplegó el último cambio.
+fetch("/api/info").then((r) => r.json())
+  .then((i) => { $("version").textContent = `Versión ${String(i.version).slice(0, 7)}`; })
+  .catch(() => {});
+
 iniciar();
