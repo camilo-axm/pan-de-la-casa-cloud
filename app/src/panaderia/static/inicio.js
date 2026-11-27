@@ -7,7 +7,7 @@ const QUIETO = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 // Datos del local. Se editan aquí y se ven en "Visítanos".
 const NEGOCIO = {
   direccion: "Calle 45 # 13-20, Chapinero, Bogotá",
-  horario: [["Lunes a sábado", "6:00 a. m. a 8:00 p. m."], ["Domingos y festivos", "6:00 a. m. a 8:00 p. m."]],
+  horario: [["Horario de atención todos los días", "6:00 a. m. a 8:00 p. m."]],
 };
 
 const ORDEN = ["Panes", "Hojaldres", "Tradicionales", "Salados", "Repostería", "Combos"];
