@@ -1,5 +1,14 @@
 # Pan de la Casa
 
+Proyecto final de PENU_M 2026-2 en la Escuela Colombiana de Ingeniería Julio Garavito, "Arquitectura cloud para una PyME", con el caso de la panadería Pan de la Casa.
+
+| Integrante | Usuario de GitHub |
+| --- | --- |
+| Camilo Aguirre | [camilo-axm](https://github.com/camilo-axm) |
+| Mateo Alejandro Sánchez Buitrago | [NiupiMateo](https://github.com/NiupiMateo) |
+
+Docente: Luis Carlos Galvis Espitia.
+
 Sitio web de la panadería con una página de inicio, una tienda para registrar pedidos para recoger y una consulta del estado del pedido. El personal entra a un panel aparte con su correo y contraseña. Desde ahí atiende los pedidos, administra el catálogo (precios, unidades, agotados y combos), consulta reportes por período y, en el caso del dueño, gestiona los usuarios y sus roles.
 
 ## Ejecutar en Windows
@@ -151,7 +160,9 @@ python scripts/prueba_carga.py https://ca-panaderia-dev.ambitiousforest-9b0e1418
 | --- | --- |
 | Diseño de alto nivel (HLD) | [docs/arquitectura](docs/arquitectura) |
 | Diagramas de contexto, arquitectura, red y seguridad, y pipeline (`.drawio` y `.png`) | [docs/diagramas](docs/diagramas) |
-| Estimación de costos | [docs/costos](docs/costos) |
+| Estimación de costos, con el Excel de supuestos y escenarios y los export de la calculadora | [docs/costos](docs/costos) |
+| Calculadora oficial de Azure, escenario MVP | [Estimación del MVP](https://azure.microsoft.com/es-es/pricing/calculator/?shared-estimate=f442aaffcf624cdeb2a022c43180691b) |
+| Calculadora oficial de Azure, escenario de producción | [Estimación de producción](https://azure.microsoft.com/es-es/pricing/calculator/?shared-estimate=c6623c7860bb439cae197becc08c7ed6) |
 | Diseño del proceso de despliegue | [docs/despliegue](docs/despliegue) |
 | Requisitos y casos de uso | [docs/requirements/requirements.md](docs/requirements/requirements.md) |
 | Pruebas de la API con Postman | [docs/pruebas/pruebas-api-postman.md](docs/pruebas/pruebas-api-postman.md) |
