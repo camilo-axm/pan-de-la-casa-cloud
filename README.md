@@ -103,3 +103,5 @@ $env:PYTHONPATH = (Resolve-Path .\src).Path
 ```
 
 Las pruebas usan una base de datos en memoria. Cubren el catálogo, los pedidos y sus reglas de horario, el flujo de estados, el inventario y los combos, los reportes, el inicio de sesión, los roles y la gestión de usuarios. Algunos casos verifican archivos del frontend en `app/src/panaderia/static/`: la tienda, el panel y las fotos del catálogo.
+
+Las pruebas manuales de la API con Postman, con sus capturas, están en [docs/pruebas/pruebas-api-postman.md](docs/pruebas/pruebas-api-postman.md).
