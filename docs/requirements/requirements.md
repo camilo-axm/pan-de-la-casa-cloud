@@ -14,7 +14,7 @@ El sistema de pan de la casa debe tener la capacidad de:
 4. El personal debe ingresar al panel con su correo y su contraseña. El panel no se enlaza desde la tienda y debe informar si las credenciales fueron rechazadas.
 5. El sistema debe mostrar al personal autorizado los pedidos, ordenados por hora de recogida, con sus productos, cliente, total y estado. Los pedidos marcados como prueba se excluyen de la consulta predeterminada.
 6. El personal debe poder avanzar un pedido solo por el flujo `recibido` → `listo` → `entregado`, o cancelarlo antes de entregarlo. Cada cambio queda registrado con la hora y la persona que lo hizo.
-7. El dueño y los administradores deben poder editar el catálogo: crear productos, cambiar precio, descripción, categoría y foto, ajustar las unidades disponibles, marcar un producto como agotado y ocultarlo o mostrarlo en la tienda.
+7. El dueño y los administradores deben poder editar el catálogo: crear productos, cambiar precio, descripción, categoría y foto, ajustar las unidades disponibles, marcar un producto como agotado y ocultarlo o mostrarlo en la tienda. La foto se sube desde el equipo y el editor muestra cómo quedará la tarjeta en la tienda antes de guardar.
 8. El dueño y los administradores deben poder crear y ajustar combos formados por productos del catálogo. Un combo consume las unidades de sus productos.
 9. El dueño y los administradores deben poder consultar un reporte por día, semana, mes, año o rango de fechas, con la cantidad de pedidos y el dinero por estado, las ventas entregadas, el valor promedio por pedido y los productos más vendidos.
 10. El dueño debe poder crear usuarios con rol de administrador o empleado, cambiar su rol, desactivarlos y asignarles una contraseña nueva. Cada persona puede cambiar su propia contraseña.
@@ -106,8 +106,8 @@ El enunciado fija seis requisitos no funcionales para cualquier caso. Así los c
 | --- | --- |
 | **Requerimiento asociado** | RF-05 |
 | **Actor** | Administrador |
-| **Precondiciones** | El panel dispone de una clave administrativa válida y MongoDB está disponible. |
-| **Flujo principal** | 1. El administrador abre o actualiza la lista.<br>2. El panel solicita los pedidos recientes con la clave.<br>3. La API devuelve los pedidos en orden descendente de creación, excluyendo los registros de prueba por defecto.<br>4. El panel muestra los productos, la hora de recogida y el estado de cada pedido. |
+| **Precondiciones** | La persona inició sesión en el panel y MongoDB está disponible. |
+| **Flujo principal** | 1. El administrador abre o actualiza la lista.<br>2. El panel solicita los pedidos con el token de la sesión.<br>3. La API devuelve los pedidos ordenados por hora de recogida, excluyendo los registros de prueba por defecto.<br>4. El panel muestra los productos, la hora de recogida y el estado de cada pedido. |
 | **Flujo alternativo** | Si no hay pedidos para mostrar, el panel presenta una lista vacía con el mensaje correspondiente. |
 | **Diagrama de caso de uso** |<<img width="857" height="253" alt="image" src="https://github.com/user-attachments/assets/01261248-83ab-4eb2-a453-6ec85159227e" />|
 | **Poscondiciones** | El administrador puede revisar los pedidos y seleccionar uno para actualizarlo. |
@@ -118,7 +118,7 @@ El enunciado fija seis requisitos no funcionales para cualquier caso. Así los c
 | --- | --- |
 | **Requerimiento asociado** | RF-06 |
 | **Actor** | Administrador |
-| **Precondiciones** | El administrador tiene una clave válida y puede seleccionar un pedido del listado. |
+| **Precondiciones** | La persona inició sesión en el panel y puede seleccionar un pedido del listado. |
 | **Flujo principal** | 1. El panel muestra en cada pedido solo las acciones permitidas: *Marcar listo*, *Entregar* o *Cancelar*.<br>2. La persona elige una acción y confirma la entrega o la cancelación.<br>3. La API comprueba que el paso respete el flujo, guarda el cambio y lo agrega al historial.<br>4. Si el pedido se cancela, las unidades vuelven al inventario. |
 | **Flujo alternativo** | Si el pedido ya no existe, la API devuelve HTTP `404`. Si el paso salta o retrocede en el flujo, o si otra persona cambió el pedido al mismo tiempo, devuelve HTTP `409`. El panel informa el motivo y recarga la lista. |
 | **Diagrama de caso de uso** |<<img width="862" height="295" alt="image" src="https://github.com/user-attachments/assets/d6bbb227-5fa4-48ee-855c-ff958db9ecd9" />|
