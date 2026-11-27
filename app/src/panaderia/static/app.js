@@ -362,10 +362,6 @@ async function iniciar() {
   pintarDias();
   pintarPedido();
 
-  fetch("/api/info").then((r) => r.json()).then((i) => {
-    $("version").textContent = `${i.ambiente} · versión ${String(i.version).slice(0, 7)}`;
-  }).catch(() => {});
-
   await cargarCatalogo();
 }
 

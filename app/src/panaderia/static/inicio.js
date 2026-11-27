@@ -311,7 +311,6 @@ $("form-contacto").addEventListener("submit", async (evento) => {
 /* ---------- Inicio ---------- */
 
 cargarCatalogo();
-fetch("/api/info").then((r) => r.json()).then((i) => { $("version").textContent = `Versión ${String(i.version).slice(0, 7)}.`; }).catch(() => {});
 
 // Desde la confirmación de la tienda llega con el número ya escrito.
 const numeroPedido = new URLSearchParams(location.search).get("pedido");
