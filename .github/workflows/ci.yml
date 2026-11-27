@@ -26,6 +26,8 @@ jobs:
           python-version: "3.12"
       - name: Instalar dependencias
         run: python -m pip install -r requirements-dev.txt
+      - name: Revisar el código con ruff
+        run: python -m ruff check --line-length 110 src tests
       - name: Ejecutar pytest
         run: python -m pytest -q
 
