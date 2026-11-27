@@ -71,6 +71,7 @@ def prepare(db: Database) -> None:
     db.pedidos.create_index([("hora_recogida", ASCENDING)])
     db.sesiones.create_index([("usuario", ASCENDING)])
     db.mensajes.create_index([("creado_en", DESCENDING)])
+    db.fotos.create_index([("creado_en", DESCENDING)])
     for producto in CATALOGO:
         inicial = {"tipo": "producto", "unidades": None, "componentes": [], **producto,
                    "foto": f"/img/{producto['_id']}.jpg", "disponible": True}

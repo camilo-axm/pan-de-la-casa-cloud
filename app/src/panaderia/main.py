@@ -4,6 +4,8 @@ Define la aplicación FastAPI con la tienda pública, el inicio de sesión del p
 la gestión de pedidos, catálogo, reportes y usuarios, y el montaje de los archivos estáticos.
 """
 
+import base64
+import binascii
 import json
 import logging
 import time
@@ -13,8 +15,9 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
+from pymongo import DESCENDING
 from pymongo.database import Database
 
 from . import catalogo, config, reportes
@@ -25,6 +28,8 @@ from .models import (
     CambioEstado,
     CambioMensaje,
     Estado,
+    FotoNueva,
+    FotoSubida,
     Ingreso,
     Mensaje,
     MensajeEntrada,
@@ -58,6 +63,10 @@ PERSONAL = ("dueno", "administrador", "empleado")
 GESTION = ("dueno", "administrador")
 SOLO_DUENO = ("dueno",)
 EXTENSIONES_FOTO = {".jpg", ".jpeg", ".png", ".webp", ".svg"}
+# Fotos subidas: se reconocen por sus primeros bytes, no por lo que diga el navegador.
+FIRMAS_FOTO = ((b"\xff\xd8\xff", "jpg", "image/jpeg"), (b"\x89PNG\r\n\x1a\n", "png", "image/png"),
+               (b"RIFF", "webp", "image/webp"))
+TAMANO_MAXIMO_FOTO = 1_500_000  # Cosmos DB admite documentos de hasta 2 MB
 
 
 def _pedido(doc: dict) -> Pedido:
@@ -414,12 +423,40 @@ def create_app(settings: Settings | None = None, db: Database | None = None) -> 
         return [catalogo.vista(d, mapa, admin=True) for d in docs]
 
     @app.get("/api/admin/fotos", response_model=list[str])
-    def fotos(_: Gestion):
+    def fotos(_: Gestion, db: Db):
+        """Primero las fotos subidas (la más reciente arriba) y luego las del catálogo inicial."""
+        subidas = [f"/img/subidas/{d['_id']}.{d['extension']}"
+                   for d in db.fotos.find({}, {"extension": 1}).sort("creado_en", DESCENDING)]
         carpeta = STATIC / "img"
-        if not carpeta.is_dir():
-            return []
-        return sorted(f"/img/{f.name}" for f in carpeta.iterdir()
-                      if f.suffix.lower() in EXTENSIONES_FOTO)
+        iniciales = sorted(f"/img/{f.name}" for f in carpeta.iterdir()
+                           if f.suffix.lower() in EXTENSIONES_FOTO) if carpeta.is_dir() else []
+        return subidas + iniciales
+
+    @app.post("/api/admin/fotos", response_model=FotoSubida, status_code=201)
+    def subir_foto(datos: FotoNueva, usuario: Gestion, db: Db):
+        try:
+            contenido = base64.b64decode(datos.datos.split(",")[-1], validate=True)
+        except (binascii.Error, ValueError):
+            raise HTTPException(422, "La foto no llegó completa. Inténtalo de nuevo.") from None
+        if len(contenido) > TAMANO_MAXIMO_FOTO:
+            raise HTTPException(413, "La foto pesa más de 1,5 MB.")
+        firma = next((f for f in FIRMAS_FOTO if contenido.startswith(f[0])
+                      and (f[1] != "webp" or contenido[8:12] == b"WEBP")), None)
+        if not firma:
+            raise HTTPException(422, "El archivo no es una foto JPG, PNG o WebP.")
+        foto_id = uuid.uuid4().hex
+        db.fotos.insert_one({"_id": foto_id, "extension": firma[1], "tipo": firma[2], "datos": contenido,
+                             "nombre": datos.nombre.strip(), "subida_por": usuario["_id"],
+                             "creado_en": datetime.now(UTC)})
+        return FotoSubida(url=f"/img/subidas/{foto_id}.{firma[1]}")
+
+    @app.get("/img/subidas/{archivo}", include_in_schema=False)
+    def ver_foto(archivo: str, db: Db):
+        foto_id, _, extension = archivo.partition(".")
+        doc = db.fotos.find_one({"_id": foto_id, "extension": extension})
+        if not doc:
+            raise HTTPException(404, "Foto no encontrada")
+        return Response(content=bytes(doc["datos"]), media_type=doc["tipo"])
 
     @app.post("/api/admin/productos", response_model=ProductoAdmin, status_code=201)
     def crear_producto(datos: ProductoNuevo, _: Gestion, db: Db):

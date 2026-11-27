@@ -109,3 +109,47 @@ def test_reporte_con_fechas_invalidas(client, admin):
     al_reves = client.get("/api/admin/reportes?desde=2026-11-30&hasta=2026-11-01", headers=admin)
     muy_largo = client.get("/api/admin/reportes?desde=2024-01-01&hasta=2026-01-01", headers=admin)
     assert al_reves.status_code == muy_largo.status_code == 422
+
+
+# ---------- Fotos subidas desde el panel ----------
+
+JPG = b"\xff\xd8\xff\xe0" + bytes(200)
+
+
+def _base64(contenido: bytes) -> str:
+    import base64
+    return "data:image/jpeg;base64," + base64.b64encode(contenido).decode()
+
+
+def test_subir_una_foto_y_usarla_en_un_producto(client, admin):
+    r = client.post("/api/admin/fotos", headers=admin, json={"nombre": "tamal.jpg", "datos": _base64(JPG)})
+    assert r.status_code == 201
+    url = r.json()["url"]
+    assert url.startswith("/img/subidas/") and url.endswith(".jpg")
+    foto = client.get(url)
+    assert foto.status_code == 200 and foto.content == JPG
+    assert foto.headers["content-type"] == "image/jpeg"
+    assert client.get("/api/admin/fotos", headers=admin).json()[0] == url
+    r = client.post("/api/admin/productos", headers=admin, json={
+        "nombre": "Arepa de choclo", "descripcion": "Con queso.", "categoria": "Salados",
+        "precio": 6000, "foto": url, "unidades": 10})
+    assert r.status_code == 201 and r.json()["foto"] == url
+
+
+def test_una_foto_que_no_es_imagen_se_rechaza(client, admin):
+    r = client.post("/api/admin/fotos", headers=admin,
+                    json={"datos": _base64(b"<script>alert(1)</script>" + bytes(100))})
+    assert r.status_code == 422
+
+
+def test_una_foto_muy_pesada_se_rechaza(client, admin):
+    r = client.post("/api/admin/fotos", headers=admin, json={"datos": _base64(JPG + bytes(1_450_000) + bytes(60_000))})
+    assert r.status_code in (413, 422)
+
+
+def test_sin_sesion_no_se_suben_fotos(client):
+    assert client.post("/api/admin/fotos", json={"datos": _base64(JPG)}).status_code == 401
+
+
+def test_una_foto_que_no_existe_da_404(client):
+    assert client.get("/img/subidas/noexiste.jpg").status_code == 404

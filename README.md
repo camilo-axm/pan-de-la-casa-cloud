@@ -87,7 +87,7 @@ La dirección y el horario que muestra "Visítanos" se editan en `NEGOCIO`, al i
 | `POST /api/auth/login` | Público | Inicia sesión con correo y contraseña. |
 | `POST /api/auth/logout`, `GET /api/auth/yo`, `POST /api/auth/clave` | Personal | Cierra sesión, consulta el usuario y cambia la contraseña propia. |
 | `GET /api/pedidos`, `PATCH /api/pedidos/{id}` | Personal | Lista pedidos y avanza su estado según el flujo. |
-| `GET/POST /api/admin/productos`, `PATCH` y `DELETE /api/admin/productos/{id}`, `GET /api/admin/fotos` | Dueño y administrador | Gestiona el catálogo y los combos. |
+| `GET/POST /api/admin/productos`, `PATCH` y `DELETE /api/admin/productos/{id}`, `GET/POST /api/admin/fotos` | Dueño y administrador | Gestiona el catálogo y los combos. Las fotos subidas se guardan en la base de datos y se ven en `/img/subidas/{archivo}`. |
 | `GET /api/admin/mensajes`, `PATCH` y `DELETE /api/admin/mensajes/{id}` | Dueño y administrador | Lee, marca y borra los mensajes de contacto. |
 | `GET /api/admin/reportes?desde=AAAA-MM-DD&hasta=AAAA-MM-DD` | Dueño y administrador | Pedidos, dinero y más vendidos del período. |
 | `GET/POST /api/usuarios`, `PATCH /api/usuarios/{correo}` | Dueño | Gestiona usuarios y roles. |

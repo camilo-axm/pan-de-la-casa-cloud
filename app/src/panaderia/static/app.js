@@ -182,6 +182,8 @@ function franjas(fecha) {
   return lista;
 }
 
+const mayuscula = (texto) => texto.charAt(0).toLocaleUpperCase("es-CO") + texto.slice(1);
+
 function dias() {
   const hoy = new Date(Date.now() - DESFASE_HORAS * 60 * MINUTO);
   const base = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate());
@@ -191,8 +193,9 @@ function dias() {
     if (!franjas(fecha).some((f) => f.libre)) continue;
     const parte = (opcion) => fecha.toLocaleDateString("es-CO", { timeZone: "UTC", ...opcion });
     const texto = `${parte({ weekday: "long" })} ${fecha.getUTCDate()} de ${parte({ month: "long" })}`;
+    // "Hoy, jueves 26 de noviembre", "Mañana, viernes 27 de noviembre", "Sábado 28 de noviembre"
     const prefijo = i === 0 ? "Hoy, " : i === 1 ? "Mañana, " : "";
-    lista.push({ fecha, texto: prefijo + texto });
+    lista.push({ fecha, texto: prefijo ? prefijo + texto : mayuscula(texto) });
   }
   return lista;
 }

@@ -54,12 +54,27 @@ class ProductoAdmin(Producto):
     componentes: list[Componente] = []
 
 
+# Fotos del catálogo inicial (/img/pandebono.jpg) o subidas desde el panel (/img/subidas/<id>.jpg).
+RUTA_FOTO = r"^/img/(subidas/)?[a-z0-9-]+\.(jpg|jpeg|png|webp|svg)$"
+
+
+class FotoNueva(BaseModel):
+    """Foto subida desde el panel. El navegador la reduce y la envía en base64."""
+
+    nombre: str = Field(default="", max_length=120)
+    datos: str = Field(min_length=100, max_length=2_000_000)
+
+
+class FotoSubida(BaseModel):
+    url: str
+
+
 class ProductoNuevo(BaseModel):
     nombre: str = Field(min_length=2, max_length=60)
     descripcion: str = Field(min_length=2, max_length=140)
     categoria: str = Field(min_length=2, max_length=30)
     precio: int = Field(ge=100, le=1_000_000)
-    foto: str = Field(pattern=r"^/img/[a-z0-9-]+\.(jpg|jpeg|png|webp|svg)$")
+    foto: str = Field(pattern=RUTA_FOTO)
     tipo: TipoProducto = "producto"
     unidades: int | None = Field(default=None, ge=0, le=10_000)
     componentes: list[Componente] = Field(default=[], max_length=8)
@@ -72,7 +87,7 @@ class ProductoCambio(BaseModel):
     descripcion: str | None = Field(default=None, min_length=2, max_length=140)
     categoria: str | None = Field(default=None, min_length=2, max_length=30)
     precio: int | None = Field(default=None, ge=100, le=1_000_000)
-    foto: str | None = Field(default=None, pattern=r"^/img/[a-z0-9-]+\.(jpg|jpeg|png|webp|svg)$")
+    foto: str | None = Field(default=None, pattern=RUTA_FOTO)
     unidades: int | None = Field(default=None, ge=0, le=10_000)
     disponible: bool | None = None
     componentes: list[Componente] | None = Field(default=None, max_length=8)

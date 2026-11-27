@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Saira:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body class="admin">
+<body class="admin oscuro">
   <header class="top">
     <div class="wrap top-in">
       <a class="marca-link" href="/admin.html" aria-label="Panel de Pan de la Casa">
@@ -213,6 +213,8 @@
   <dialog id="editor" aria-labelledby="e-titulo">
     <form id="form-producto" method="dialog" novalidate>
       <h2 id="e-titulo">Producto</h2>
+      <div class="editor-cols">
+      <div class="editor-campos">
       <div id="error-producto" class="alert error" role="alert" hidden></div>
       <label>Nombre <input id="p-nombre" required minlength="2" maxlength="60"></label>
       <label>Descripción <input id="p-descripcion" required minlength="2" maxlength="140"></label>
@@ -221,10 +223,23 @@
         <label>Precio (COP) <input id="p-precio" type="number" min="100" max="1000000" step="100" required></label>
       </div>
       <datalist id="categorias-lista"></datalist>
-      <label>Foto
-        <select id="p-foto"></select>
-      </label>
-      <img id="p-foto-vista" class="foto-vista" alt="">
+      <div class="foto-campo">
+        <span class="etiqueta" id="p-foto-titulo">Foto</span>
+        <input type="hidden" id="p-foto">
+        <input type="file" id="p-archivo" accept="image/jpeg,image/png,image/webp" hidden>
+        <div id="p-zona" class="zona-foto" role="button" tabindex="0" aria-labelledby="p-foto-titulo p-zona-texto">
+          <img id="p-foto-vista" alt="">
+          <div class="zona-texto" id="p-zona-texto">
+            <strong>Sube una foto desde tu equipo</strong>
+            <span>Haz clic aquí o arrastra la imagen. JPG, PNG o WebP.</span>
+          </div>
+        </div>
+        <p id="p-foto-estado" class="hint" role="status">La tienda la muestra recortada en formato horizontal (3:2).</p>
+        <details id="p-galeria-caja">
+          <summary>O usa una foto que ya está guardada</summary>
+          <div id="p-galeria" class="galeria"></div>
+        </details>
+      </div>
       <div id="p-inventario">
         <label>Unidades disponibles <input id="p-unidades" type="number" min="0" max="10000" step="1"></label>
         <label class="check"><input type="checkbox" id="p-sin-limite"> Sin control de inventario</label>
@@ -235,6 +250,13 @@
         <button type="button" class="sec" id="p-agregar-componente">+ Agregar producto</button>
         <p class="hint">Las unidades del combo dependen de las de sus productos.</p>
       </fieldset>
+      </div>
+      <aside class="editor-vista" aria-label="Vista previa">
+        <p class="etiqueta">Así se verá en la tienda</p>
+        <div id="p-vista-tarjeta"></div>
+        <p class="hint">Se actualiza mientras escribes. Los clientes no ven nada hasta que guardes.</p>
+      </aside>
+      </div>
       <div class="acciones fin">
         <button type="button" class="sec" id="p-cancelar">Cancelar</button>
         <button type="submit" id="p-guardar">Guardar</button>

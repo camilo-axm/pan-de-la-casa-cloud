@@ -320,8 +320,9 @@ function abrirEditor(p = null, tipo = "producto") {
   $("p-categoria").value = p?.categoria || (tipo === "combo" ? "Combos" : "");
   $("p-precio").value = p?.precio || "";
   $("categorias-lista").replaceChildren(...[...new Set(productos.map((x) => x.categoria))].map((c) => new Option(c)));
-  $("p-foto").replaceChildren(...fotos.map((f) => new Option(f.replace("/img/", ""), f, false, f === p?.foto)));
-  $("p-foto-vista").src = $("p-foto").value;
+  elegirFoto(p?.foto || "");
+  estadoFoto("La tienda la muestra recortada en formato horizontal (3:2).");
+  $("p-galeria-caja").open = false;
   $("p-inventario").hidden = tipo === "combo";
   $("p-sin-limite").checked = p ? p.unidades === null : false;
   $("p-unidades").value = p?.unidades ?? (p ? "" : 0);
@@ -329,7 +330,117 @@ function abrirEditor(p = null, tipo = "producto") {
   $("p-componentes-caja").hidden = tipo !== "combo";
   $("p-componentes").replaceChildren(...(tipo === "combo"
     ? (p?.componentes?.length ? p.componentes : [{}, {}]).map(filaComponente) : []));
+  pintarVista();
   $("editor").showModal();
+}
+
+/* ---------- Foto del producto ---------- */
+
+const ANCHO_FOTO = 1200;
+const ALTO_FOTO = 800;
+const MAXIMO_ORIGINAL = 15 * 1024 * 1024;
+
+function estadoFoto(texto, error = false) {
+  $("p-foto-estado").textContent = texto;
+  $("p-foto-estado").classList.toggle("error", error);
+}
+
+function elegirFoto(url) {
+  $("p-foto").value = url;
+  if (url) $("p-foto-vista").src = url; else $("p-foto-vista").removeAttribute("src");
+  $("p-zona").classList.toggle("sin-foto", !url);
+  pintarGaleria();
+  pintarVista();
+}
+
+function pintarGaleria() {
+  const actual = $("p-foto").value;
+  $("p-galeria").replaceChildren(...fotos.map((f) => {
+    const b = el("button", { type: "button", "aria-pressed": String(f === actual), title: f.split("/").pop() });
+    b.append(el("img", { src: f, alt: "", loading: "lazy" }));
+    b.addEventListener("click", () => {
+      elegirFoto(f);
+      estadoFoto("Foto elegida de las guardadas.");
+    });
+    return b;
+  }));
+}
+
+// Recorta al centro en 3:2 y la deja en 1200 x 800 px como JPG, el mismo formato de la tienda.
+async function prepararFoto(archivo) {
+  const imagen = await createImageBitmap(archivo);
+  // El trozo más grande en 3:2 que cabe en la foto, tomado del centro.
+  const proporcion = Math.min(imagen.width / ANCHO_FOTO, imagen.height / ALTO_FOTO);
+  const corteAncho = ANCHO_FOTO * proporcion;
+  const corteAlto = ALTO_FOTO * proporcion;
+  const lienzo = document.createElement("canvas");
+  lienzo.width = Math.min(ANCHO_FOTO, Math.round(corteAncho));
+  lienzo.height = Math.round(lienzo.width * ALTO_FOTO / ANCHO_FOTO);
+  const ctx = lienzo.getContext("2d");
+  ctx.fillStyle = "#fff"; // las partes transparentes de un PNG quedan blancas
+  ctx.fillRect(0, 0, lienzo.width, lienzo.height);
+  ctx.drawImage(imagen, (imagen.width - corteAncho) / 2, (imagen.height - corteAlto) / 2, corteAncho, corteAlto,
+    0, 0, lienzo.width, lienzo.height);
+  imagen.close();
+  return lienzo.toDataURL("image/jpeg", 0.85);
+}
+
+async function subirFoto(archivo) {
+  if (!["image/jpeg", "image/png", "image/webp"].includes(archivo.type)) {
+    return estadoFoto("Ese archivo no es una foto. Usa un JPG, PNG o WebP.", true);
+  }
+  if (archivo.size > MAXIMO_ORIGINAL) {
+    return estadoFoto("La foto pesa más de 15 MB. Elige una más liviana.", true);
+  }
+  $("p-zona").classList.add("cargando");
+  estadoFoto(`Subiendo ${archivo.name}…`);
+  try {
+    const datos = await prepararFoto(archivo);
+    $("p-foto-vista").src = datos;
+    $("p-zona").classList.remove("sin-foto");
+    const { url } = await api("/api/admin/fotos", { method: "POST", body: { nombre: archivo.name, datos } });
+    fotos = [url, ...fotos];
+    elegirFoto(url);
+    estadoFoto(`Listo, ${archivo.name} quedó guardada. Se usa al guardar el producto.`);
+  } catch (e) {
+    elegirFoto($("p-foto").value);
+    estadoFoto(e.status ? e.message : "No se pudo leer la foto. Prueba con otra.", true);
+  } finally {
+    $("p-zona").classList.remove("cargando");
+  }
+}
+
+/* ---------- Vista previa de la tarjeta ---------- */
+
+function pintarVista() {
+  const tipo = $("form-producto").dataset.tipo;
+  const precio = Number($("p-precio").value);
+  const sinLimite = $("p-sin-limite").checked;
+  const unidades = Number($("p-unidades").value || 0);
+  const agotado = tipo !== "combo" && !sinLimite && unidades <= 0;
+  const nombre = $("p-nombre").value.trim() || "Nombre del producto";
+  const card = el("article", { class: agotado ? "card sin-stock" : "card" });
+  card.append($("p-foto").value
+    ? el("img", { src: $("p-foto").value, alt: "", width: 240, height: 160 })
+    : el("div", { class: "foto-vacia" }, "Aquí va la foto"));
+  const body = el("div", { class: "card-body" });
+  body.append(el("p", { class: "cat" }, $("p-categoria").value.trim() || "Categoría"), el("h3", {}, nombre),
+    el("p", { class: "desc" }, $("p-descripcion").value.trim() || "Descripción corta del producto."));
+  if (tipo === "combo") {
+    const partes = [...$("p-componentes").children].map((f) => {
+      const elegido = productos.find((x) => x.id === f.querySelector("select").value);
+      return elegido ? `${Number(f.querySelector("input").value) || 1} ${elegido.nombre}` : null;
+    }).filter(Boolean);
+    if (partes.length) body.append(el("p", { class: "incluye" }, "Incluye " + partes.join(", ")));
+  } else if (!agotado && !sinLimite && unidades <= 5) {
+    body.append(el("p", { class: "quedan" }, unidades === 1 ? "Queda 1" : `Quedan ${unidades}`));
+  }
+  const row = el("div", { class: "row" });
+  row.append(el("span", { class: "precio" }, precio >= 100 ? pesos(precio) : "$0"),
+    agotado ? el("span", { class: "agotado" }, "Agotado") : el("button", { type: "button", tabindex: "-1" }, "Agregar"));
+  body.append(row);
+  card.append(body);
+  $("p-vista-tarjeta").replaceChildren(card);
 }
 
 async function guardarEditor(evento) {
@@ -342,6 +453,7 @@ async function guardarEditor(evento) {
     precio: Number($("p-precio").value),
     foto: $("p-foto").value,
   };
+  if (!datos.foto) return mostrarError("error-producto", "Sube una foto o elige una de las guardadas.");
   if (datos.nombre.length < 2 || datos.descripcion.length < 2 || datos.categoria.length < 2) {
     return mostrarError("error-producto", "Completa nombre, descripción y categoría.");
   }
@@ -621,7 +733,27 @@ $("nuevo-producto").addEventListener("click", () => abrirEditor(null, "producto"
 $("nuevo-combo").addEventListener("click", () => abrirEditor(null, "combo"));
 $("form-producto").addEventListener("submit", guardarEditor);
 $("p-cancelar").addEventListener("click", () => $("editor").close());
-$("p-foto").addEventListener("change", () => { $("p-foto-vista").src = $("p-foto").value; });
+$("p-zona").addEventListener("click", () => $("p-archivo").click());
+$("p-zona").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("p-archivo").click(); }
+});
+$("p-archivo").addEventListener("change", () => {
+  if ($("p-archivo").files[0]) subirFoto($("p-archivo").files[0]);
+  $("p-archivo").value = "";
+});
+["dragenter", "dragover"].forEach((tipo) => $("p-zona").addEventListener(tipo, (e) => {
+  e.preventDefault();
+  $("p-zona").classList.add("encima");
+}));
+["dragleave", "drop"].forEach((tipo) => $("p-zona").addEventListener(tipo, () => $("p-zona").classList.remove("encima")));
+$("p-zona").addEventListener("drop", (e) => {
+  e.preventDefault();
+  if (e.dataTransfer.files[0]) subirFoto(e.dataTransfer.files[0]);
+});
+// La vista previa sigue lo que se escribe en el editor.
+$("form-producto").addEventListener("input", pintarVista);
+$("form-producto").addEventListener("change", pintarVista);
+$("p-componentes").addEventListener("click", () => setTimeout(pintarVista));
 $("p-sin-limite").addEventListener("change", () => { $("p-unidades").disabled = $("p-sin-limite").checked; });
 $("p-agregar-componente").addEventListener("click", () => $("p-componentes").append(filaComponente()));
 $("rango").addEventListener("submit", (e) => { e.preventDefault(); periodoActual = "personalizado"; iniciarReportes(); });
