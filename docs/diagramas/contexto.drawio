@@ -9,7 +9,7 @@
             <mxGeometry height="170" width="200" x="120" y="81" as="geometry" />
           </mxCell>
         </object>
-        <object label="&lt;b&gt;Administrador&lt;/b&gt;&lt;br&gt;&#xa;&lt;br&gt;&lt;br&gt;Dueño o encargado de la panadería" id="c3">
+        <object label="&lt;b&gt;Personal de la panadería&lt;/b&gt;&lt;br&gt;&#xa;&lt;br&gt;&lt;br&gt;Dueño, administradores y empleados, cada uno con su usuario" id="c3">
           <mxCell parent="1" style="html=1;fontSize=11;dashed=0;whiteSpace=wrap;fillColor=#083F75;strokeColor=#06315C;fontColor=#ffffff;shape=mxgraph.c4.person2;align=center;metaEdit=1;resizable=0;fontFamily=Arial;" vertex="1">
             <mxGeometry height="170" width="200" x="1030" y="60" as="geometry" />
           </mxCell>
@@ -19,7 +19,7 @@
             <mxGeometry height="170" width="200" x="120" y="610" as="geometry" />
           </mxCell>
         </object>
-        <mxCell id="c5" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0B4884;fontColor=#ffffff;fontSize=12;fontFamily=Arial;" value="&lt;b style=&quot;font-size:15px&quot;&gt;Plataforma de pedidos Pan de la Casa&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;div&gt;Sistema de software en Azure&lt;br&gt;&lt;br&gt;Muestra el catálogo con fotos y precios, recibe pedidos web con hora de recogida y da un panel al administrador.&lt;/div&gt;" vertex="1">
+        <mxCell id="c5" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0B4884;fontColor=#ffffff;fontSize=12;fontFamily=Arial;" value="&lt;b style=&quot;font-size:15px&quot;&gt;Plataforma de pedidos Pan de la Casa&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;div&gt;Sistema de software en Azure&lt;br&gt;&lt;br&gt;Muestra el catálogo con fotos y precios, recibe pedidos web con hora de recogida, deja consultar el estado del pedido y da un panel al personal.&lt;/div&gt;" vertex="1">
           <mxGeometry height="170" width="400" x="450" y="330" as="geometry" />
         </mxCell>
         <mxCell id="c6" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#8C8C8C;strokeColor=#6B6B6B;fontColor=#ffffff;fontSize=12;fontFamily=Arial;" value="&lt;b style=&quot;font-size:14px&quot;&gt;GitHub&lt;/b&gt;&lt;br&gt;&lt;br&gt;Repositorio, GitHub Actions y registro de imágenes" vertex="1">
@@ -31,7 +31,7 @@
         <mxCell id="c8" edge="1" parent="1" source="c2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;strokeWidth=1.5;fontSize=11;fontColor=#1a1a1a;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;fontFamily=Arial;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.35;entryDx=0;entryDy=0;" target="c5" value="Consulta el catálogo&lt;br&gt;y registra pedidos&lt;br&gt;[HTTPS]">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c9" edge="1" parent="1" source="c3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;strokeWidth=1.5;fontSize=11;fontColor=#1a1a1a;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;fontFamily=Arial;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.35;entryDx=0;entryDy=0;" target="c5" value="Revisa los pedidos&lt;br&gt;y cambia su estado&lt;br&gt;[HTTPS]">
+        <mxCell id="c9" edge="1" parent="1" source="c3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;strokeWidth=1.5;fontSize=11;fontColor=#1a1a1a;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;fontFamily=Arial;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.35;entryDx=0;entryDy=0;" target="c5" value="Atiende pedidos y mantiene&lt;br&gt;el catálogo con su usuario&lt;br&gt;[HTTPS]">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="c10" edge="1" parent="1" source="c4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#333333;strokeWidth=1.5;fontSize=11;fontColor=#1a1a1a;labelBackgroundColor=#ffffff;endArrow=block;endFill=1;fontFamily=Arial;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="c6" value="Sube cambios por&lt;br&gt;Pull Request [Git]">
