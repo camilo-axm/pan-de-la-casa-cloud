@@ -1,5 +1,34 @@
 # Pan de la Casa
 
+**Arquitectura cloud para una PyME.** Proyecto final de PENU_M 2026-2, Escuela Colombiana de Ingeniería Julio Garavito.
+
+| Rol | Nombre | GitHub |
+| --- | --- | --- |
+| Integrante | Camilo Aguirre | [camilo-axm](https://github.com/camilo-axm) |
+| Integrante | Mateo Alejandro Sánchez Buitrago | [NiupiMateo](https://github.com/NiupiMateo) |
+| Docente | Luis Carlos Galvis Espitia | |
+
+## Introducción
+
+Pan de la Casa es una panadería de barrio con una sede. Hoy recibe los pedidos en el mostrador y por teléfono, y los fines de semana la demanda se triplica y la fila crece. No tiene personal de sistemas y puede gastar como máximo USD 150 al mes en la nube.
+
+En este proyecto actuamos como su equipo de arquitectura. Diseñamos una plataforma de pedidos para recoger en Microsoft Azure y la desplegamos como un MVP desde GitHub Actions, sin pasos manuales. El cliente consulta el catálogo con fotos y precios, arma su pedido, elige la hora de recogida y después consulta en qué paso va. El personal entra a un panel con su propio usuario y, según su rol, atiende los pedidos, mantiene el catálogo y el inventario del día, revisa los reportes de ventas y lee los mensajes de los clientes.
+
+El repositorio reúne las seis partes que pide el proyecto.
+
+| Parte | Dónde está |
+| --- | --- |
+| Diseño de alto nivel (HLD) con sus decisiones de arquitectura | [docs/arquitectura](docs/arquitectura) |
+| Diagramas de contexto, arquitectura cloud, red y seguridad, y pipeline | [docs/diagramas](docs/diagramas) |
+| Estimación de costos y optimizaciones FinOps | [docs/costos](docs/costos) |
+| Diseño del proceso de despliegue | [docs/despliegue](docs/despliegue) |
+| MVP, infraestructura en Terraform y workflows de GitHub Actions | `app`, `infra` y `.github/workflows` |
+| Presentación de la sustentación | [docs/sustentacion](docs/sustentacion) |
+
+El MVP está publicado en [ca-panaderia-dev.ambitiousforest-9b0e1418.mexicocentral.azurecontainerapps.io](https://ca-panaderia-dev.ambitiousforest-9b0e1418.mexicocentral.azurecontainerapps.io). Las secciones siguientes explican cómo ejecutarlo en un equipo, sus reglas de negocio, su arquitectura y su despliegue.
+
+## Qué hace la aplicación
+
 Sitio web de la panadería con una página de inicio, una tienda para registrar pedidos para recoger y una consulta del estado del pedido. El personal entra a un panel aparte con su correo y contraseña. Desde ahí atiende los pedidos, administra el catálogo (precios, unidades, agotados y combos), consulta reportes por período y, en el caso del dueño, gestiona los usuarios y sus roles.
 
 ## Ejecutar en Windows
@@ -151,7 +180,9 @@ python scripts/prueba_carga.py https://ca-panaderia-dev.ambitiousforest-9b0e1418
 | --- | --- |
 | Diseño de alto nivel (HLD) | [docs/arquitectura](docs/arquitectura) |
 | Diagramas de contexto, arquitectura, red y seguridad, y pipeline (`.drawio` y `.png`) | [docs/diagramas](docs/diagramas) |
-| Estimación de costos | [docs/costos](docs/costos) |
+| Estimación de costos, con el Excel de supuestos y escenarios y los export de la calculadora | [docs/costos](docs/costos) |
+| Calculadora oficial de Azure, escenario MVP | [Estimación del MVP](https://azure.microsoft.com/es-es/pricing/calculator/?shared-estimate=f442aaffcf624cdeb2a022c43180691b) |
+| Calculadora oficial de Azure, escenario de producción | [Estimación de producción](https://azure.microsoft.com/es-es/pricing/calculator/?shared-estimate=c6623c7860bb439cae197becc08c7ed6) |
 | Diseño del proceso de despliegue | [docs/despliegue](docs/despliegue) |
 | Requisitos y casos de uso | [docs/requirements/requirements.md](docs/requirements/requirements.md) |
 | Pruebas de la API con Postman | [docs/pruebas/pruebas-api-postman.md](docs/pruebas/pruebas-api-postman.md) |
