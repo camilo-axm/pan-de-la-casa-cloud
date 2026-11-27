@@ -27,13 +27,15 @@ provider "azurerm" {
 }
 
 variable "location" {
-  description = "Region permitida por la politica de tu suscripcion."
+  description = "Región de Azure para los recursos de bootstrap."
   type        = string
+  default     = "mexicocentral"
 }
 
 variable "github_repository" {
   description = "Repositorio que puede desplegar, como usuario/repositorio."
   type        = string
+  default     = "camilo-axm/pan-de-la-casa-cloud"
 
   validation {
     condition     = can(regex("^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$", var.github_repository))
@@ -43,8 +45,8 @@ variable "github_repository" {
 
 variable "github_repository_ids" {
   description = <<-EOT
-    Repositorio con sus ID numericos, como usuario@123/repositorio@456. Los repositorios creados desde
-    mediados de 2026 firman el token OIDC con este formato. Obtengalo con:
+    Identificadores públicos para el subject OIDC con IDs, como usuario@123/repositorio@456.
+    Al usar otro repositorio, obtén sus IDs con:
     gh api repos/usuario/repositorio --jq '"\(.owner.login)@\(.owner.id)/\(.name)@\(.id)"'
   EOT
   type        = string
@@ -125,13 +127,16 @@ resource "azurerm_user_assigned_identity" "github" {
   tags                = azurerm_resource_group.state.tags
 }
 
-# Azure solo acepta tokens de este repositorio y de estos dos GitHub Environments. Se registran los
-# dos formatos de subject: con nombres (repositorios anteriores) y con ID numericos (los nuevos).
 locals {
+  github_repository_ids = var.github_repository_ids != null ? var.github_repository_ids : lookup({
+    "camilo-axm/pan-de-la-casa-cloud" = "camilo-axm@226768162/pan-de-la-casa-cloud@1467983565"
+  }, var.github_repository, null)
+
+  # Las credenciales federadas se limitan al repositorio y al ambiente del workflow.
   github_subjects = merge(
     { for environment in ["dev", "prod"] : "github-${environment}" => "repo:${var.github_repository}:environment:${environment}" },
-    var.github_repository_ids == null ? {} : {
-      for environment in ["dev", "prod"] : "github-${environment}-ids" => "repo:${var.github_repository_ids}:environment:${environment}"
+    local.github_repository_ids == null ? {} : {
+      for environment in ["dev", "prod"] : "github-${environment}-ids" => "repo:${local.github_repository_ids}:environment:${environment}"
     },
   )
 }
@@ -202,6 +207,10 @@ output "azure_tenant_id" {
 
 output "azure_subscription_id" {
   value = data.azurerm_client_config.current.subscription_id
+}
+
+output "azure_location" {
+  value = azurerm_resource_group.state.location
 }
 
 output "resource_group_name" {
