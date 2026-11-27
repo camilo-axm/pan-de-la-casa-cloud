@@ -2,6 +2,10 @@ name: Aplicar Terraform
 
 on:
   workflow_call:
+    secrets:
+      OWNER_PASSWORD:
+        description: Contraseña inicial del dueño en el ambiente dev.
+        required: false
     inputs:
       root:
         description: Carpeta dentro de infra/environments
@@ -58,6 +62,20 @@ jobs:
             fi
           done
           exit "$failed"
+      - name: Validar credenciales del dueño
+        if: inputs.root == 'dev'
+        env:
+          OWNER_EMAIL: ${{ vars.OWNER_EMAIL }}
+          OWNER_PASSWORD: ${{ secrets.OWNER_PASSWORD }}
+        run: |
+          if [[ -z "$OWNER_EMAIL" ]]; then
+            echo "::error::Falta la variable OWNER_EMAIL en el ambiente dev"
+            exit 1
+          fi
+          if (( ${#OWNER_PASSWORD} < 10 )); then
+            echo "::error::Configura el secreto OWNER_PASSWORD en dev con al menos 10 caracteres"
+            exit 1
+          fi
       - name: Variables de la aplicación
         if: inputs.image != ''
         env:

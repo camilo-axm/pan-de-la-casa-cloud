@@ -103,6 +103,8 @@ jobs:
       contents: read
       id-token: write
     uses: ./.github/workflows/terraform-apply.yml
+    secrets:
+      OWNER_PASSWORD: ${{ secrets.OWNER_PASSWORD }}
     with:
       root: dev
       environment: dev
