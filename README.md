@@ -105,3 +105,54 @@ $env:PYTHONPATH = (Resolve-Path .\src).Path
 Las pruebas usan una base de datos en memoria. Cubren el catálogo, los pedidos y sus reglas de horario, el flujo de estados, el inventario y los combos, los reportes, el inicio de sesión, los roles y la gestión de usuarios. Algunos casos verifican archivos del frontend en `app/src/panaderia/static/`: la tienda, el panel y las fotos del catálogo.
 
 Las pruebas manuales de la API con Postman, con sus capturas, están en [docs/pruebas/pruebas-api-postman.md](docs/pruebas/pruebas-api-postman.md).
+
+## Arquitectura y despliegue en Azure
+
+La aplicación es un solo contenedor con FastAPI que sirve el sitio y la API. Corre en Azure Container Apps, guarda los datos en Azure Cosmos DB for MongoDB, lee sus secretos de Key Vault y envía los logs a Log Analytics. Toda la infraestructura está en Terraform, dentro de `infra/`.
+
+| Carpeta | Qué contiene |
+| --- | --- |
+| `infra/bootstrap` | Almacenamiento del estado de Terraform y la identidad con la que GitHub entra a Azure por OIDC. Se aplica una sola vez. |
+| `infra/environments/shared` | Log Analytics y el ambiente de Container Apps que comparten los ambientes. |
+| `infra/environments/dev` y `prod` | Cada ambiente con su grupo de recursos, base de datos, Key Vault, identidad, alertas y presupuesto. |
+| `infra/modules` | Módulos `database`, `key_vault`, `container_app` y `stack`, con pruebas que usan proveedores simulados. |
+
+El ambiente dev está publicado en [ca-panaderia-dev.ambitiousforest-9b0e1418.mexicocentral.azurecontainerapps.io](https://ca-panaderia-dev.ambitiousforest-9b0e1418.mexicocentral.azurecontainerapps.io). Escala de 0 a 3 réplicas según las solicitudes.
+
+### Pipeline
+
+| Workflow | Cuándo corre | Qué hace |
+| --- | --- | --- |
+| `ci.yml` | En cada Pull Request | Revisa el código con ruff, corre las pruebas con pytest y valida Terraform con `fmt`, `validate` y `test`. |
+| `deploy.yml` | En cada push a `develop` que toca `app`, `infra`, `scripts` o los workflows | Repite las pruebas, construye la imagen y la publica en GHCR fijada por digest, aplica Terraform en `shared` y `dev` y corre la prueba de humo de `scripts/smoke.sh`. |
+| `deploy.yml` a mano con un digest | Cuando hay que volver atrás | Despliega esa imagen anterior sin construir una nueva. |
+| `destroy.yml` | A mano, escribiendo `dev` para confirmar | Elimina el ambiente dev para no gastar crédito. |
+
+El pipeline no guarda credenciales de Azure. Usa estas variables y secretos del ambiente `dev` de GitHub.
+
+| Nombre | Tipo | Uso |
+| --- | --- | --- |
+| `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | Variable | Identidad OIDC que crea el bootstrap. |
+| `AZURE_LOCATION` | Variable | Región de los recursos. |
+| `TF_STATE_RESOURCE_GROUP`, `TF_STATE_STORAGE_ACCOUNT`, `TF_STATE_CONTAINER` | Variable | Dónde se guarda el estado de Terraform. |
+| `OWNER_EMAIL` | Variable | Correo de la cuenta del dueño. |
+| `OWNER_PASSWORD` | Secreto | Contraseña inicial del dueño, mínimo 10 caracteres. |
+| `ALERT_EMAIL` | Variable | Correo que recibe las alertas de errores y de presupuesto. |
+
+Para comprobar el escalado, corre la prueba de carga contra la URL de dev y mira la métrica Replica Count de la Container App en el portal:
+
+```powershell
+python scripts/prueba_carga.py https://ca-panaderia-dev.ambitiousforest-9b0e1418.mexicocentral.azurecontainerapps.io
+```
+
+## Documentación
+
+| Documento | Ubicación |
+| --- | --- |
+| Diseño de alto nivel (HLD) | [docs/arquitectura](docs/arquitectura) |
+| Diagramas de contexto, arquitectura, red y seguridad, y pipeline (`.drawio` y `.png`) | [docs/diagramas](docs/diagramas) |
+| Estimación de costos | [docs/costos](docs/costos) |
+| Diseño del proceso de despliegue | [docs/despliegue](docs/despliegue) |
+| Requisitos y casos de uso | [docs/requirements/requirements.md](docs/requirements/requirements.md) |
+| Pruebas de la API con Postman | [docs/pruebas/pruebas-api-postman.md](docs/pruebas/pruebas-api-postman.md) |
+| Presentación de la sustentación | [docs/sustentacion](docs/sustentacion) |
