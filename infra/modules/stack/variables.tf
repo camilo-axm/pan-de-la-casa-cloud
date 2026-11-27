@@ -78,6 +78,12 @@ variable "owner_password" {
   }
 }
 
+variable "container_apps_express" {
+  description = "Usa secretos nativos de Container Apps cuando el entorno es Express."
+  type        = bool
+  default     = false
+}
+
 variable "alert_5xx_threshold" {
   description = "Errores 5xx en 5 minutos que disparan la alerta."
   type        = number

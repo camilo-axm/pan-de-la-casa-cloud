@@ -76,6 +76,7 @@ module "stack" {
   monthly_budget_usd           = 5
   owner_email                  = var.owner_email
   owner_password               = var.owner_password
+  container_apps_express       = true
 }
 
 output "app_url" {

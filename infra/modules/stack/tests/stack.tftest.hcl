@@ -90,9 +90,10 @@ run "dev_guarda_la_clave_del_dueno_en_key_vault" {
   command = apply
 
   variables {
-    environment    = "dev"
-    owner_email    = "dueno@example.com"
-    owner_password = "clave-solo-para-pruebas"
+    environment            = "dev"
+    owner_email            = "dueno@example.com"
+    owner_password         = "clave-solo-para-pruebas"
+    container_apps_express = true
   }
 
   assert {

@@ -40,6 +40,13 @@ resource "random_password" "admin_key" {
   special = false
 }
 
+locals {
+  app_secrets = merge({
+    "mongodb-uri"   = module.database.connection_string
+    "admin-api-key" = random_password.admin_key.result
+  }, var.owner_email != "" ? { "owner-password" = var.owner_password } : {})
+}
+
 resource "azurerm_resource_group" "this" {
   name     = "rg-${local.name}"
   location = var.location
@@ -66,26 +73,25 @@ module "key_vault" {
   rbac_propagation_wait    = var.rbac_propagation_wait
   tags                     = local.tags
 
-  secrets = merge({
-    "mongodb-uri"   = module.database.connection_string
-    "admin-api-key" = random_password.admin_key.result
-  }, var.owner_email != "" ? { "owner-password" = var.owner_password } : {})
+  secrets = local.app_secrets
 }
 
 module "app" {
   source = "../container_app"
 
-  name                  = local.name
-  resource_group_name   = azurerm_resource_group.this.name
-  location              = azurerm_resource_group.this.location
-  environment_id        = var.container_app_environment_id
-  image                 = var.image
-  key_vault_id          = module.key_vault.id
-  secret_ids            = module.key_vault.secret_ids
-  min_replicas          = var.min_replicas
-  max_replicas          = var.max_replicas
-  rbac_propagation_wait = var.rbac_propagation_wait
-  tags                  = local.tags
+  name                   = local.name
+  resource_group_name    = azurerm_resource_group.this.name
+  location               = azurerm_resource_group.this.location
+  environment_id         = var.container_app_environment_id
+  image                  = var.image
+  key_vault_id           = module.key_vault.id
+  secret_ids             = module.key_vault.secret_ids
+  secret_values          = var.container_apps_express ? local.app_secrets : {}
+  container_apps_express = var.container_apps_express
+  min_replicas           = var.min_replicas
+  max_replicas           = var.max_replicas
+  rbac_propagation_wait  = var.rbac_propagation_wait
+  tags                   = local.tags
 
   environment_variables = merge({
     APP_ENV    = var.environment

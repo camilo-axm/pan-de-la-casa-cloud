@@ -44,6 +44,19 @@ variable "environment_variables" {
   default     = {}
 }
 
+variable "container_apps_express" {
+  description = "Indica que la app se publica en un entorno Express."
+  type        = bool
+  default     = false
+}
+
+variable "secret_values" {
+  description = "Valores sensibles para los secretos nativos de Container Apps en modo Express."
+  type        = map(string)
+  sensitive   = true
+  default     = {}
+}
+
 variable "min_replicas" {
   description = "Con 0 la app escala a cero y no consume computo sin trafico."
   type        = number

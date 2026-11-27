@@ -39,7 +39,7 @@ resource "azurerm_container_app" "this" {
   resource_group_name          = var.resource_group_name
   container_app_environment_id = var.environment_id
   revision_mode                = "Single"
-  workload_profile_name        = "Consumption"
+  workload_profile_name        = var.container_apps_express ? null : "Consumption"
   tags                         = var.tags
   depends_on                   = [time_sleep.rbac_propagation]
 
@@ -52,8 +52,9 @@ resource "azurerm_container_app" "this" {
     for_each = var.secret_ids
     content {
       name                = secret.key
-      key_vault_secret_id = secret.value
-      identity            = azurerm_user_assigned_identity.app.id
+      key_vault_secret_id = var.container_apps_express ? null : secret.value
+      identity            = var.container_apps_express ? null : azurerm_user_assigned_identity.app.id
+      value               = var.container_apps_express ? var.secret_values[secret.key] : null
     }
   }
 
