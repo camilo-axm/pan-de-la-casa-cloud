@@ -86,6 +86,21 @@ run "dev_es_barato_y_desechable" {
   }
 }
 
+run "dev_guarda_la_clave_del_dueno_en_key_vault" {
+  command = apply
+
+  variables {
+    environment    = "dev"
+    owner_email    = "dueno@example.com"
+    owner_password = "clave-solo-para-pruebas"
+  }
+
+  assert {
+    condition     = contains(keys(module.key_vault.secret_ids), "owner-password")
+    error_message = "La contraseña inicial debe tener una referencia en Key Vault."
+  }
+}
+
 run "prod_escala_y_avisa" {
   command = apply
 

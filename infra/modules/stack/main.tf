@@ -66,10 +66,10 @@ module "key_vault" {
   rbac_propagation_wait    = var.rbac_propagation_wait
   tags                     = local.tags
 
-  secrets = {
+  secrets = merge({
     "mongodb-uri"   = module.database.connection_string
     "admin-api-key" = random_password.admin_key.result
-  }
+  }, var.owner_email != "" ? { "owner-password" = var.owner_password } : {})
 }
 
 module "app" {
@@ -87,10 +87,10 @@ module "app" {
   rbac_propagation_wait = var.rbac_propagation_wait
   tags                  = local.tags
 
-  environment_variables = {
+  environment_variables = merge({
     APP_ENV    = var.environment
     MONGODB_DB = module.database.database_name
-  }
+  }, var.owner_email != "" ? { OWNER_EMAIL = var.owner_email } : {})
 }
 
 resource "azurerm_monitor_action_group" "ops" {

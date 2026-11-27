@@ -102,6 +102,14 @@ resource "azurerm_container_app" "this" {
         secret_name = "admin-api-key"
       }
 
+      dynamic "env" {
+        for_each = contains(keys(var.secret_ids), "owner-password") ? ["owner-password"] : []
+        content {
+          name        = "OWNER_PASSWORD"
+          secret_name = env.value
+        }
+      }
+
       liveness_probe {
         transport = "HTTP"
         port      = 8000
