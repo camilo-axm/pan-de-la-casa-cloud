@@ -70,7 +70,7 @@ module "stack" {
   container_app_environment_id = data.azurerm_container_app_environment.shared.id
   image                        = var.image
   min_replicas                 = 0
-  max_replicas                 = 1
+  max_replicas                 = 3 # igual que prod, soporta el pico 3x y escala a cero sin trafico
   cosmos_free_tier             = var.cosmos_free_tier
   alert_email                  = var.alert_email
   monthly_budget_usd           = 5
