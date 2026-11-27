@@ -38,6 +38,19 @@ variable "alert_email" {
   default = null
 }
 
+variable "owner_email" {
+  description = "Correo de la cuenta inicial del dueño."
+  type        = string
+  default     = ""
+}
+
+variable "owner_password" {
+  description = "Contraseña inicial del dueño, suministrada desde GitHub Actions."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "cosmos_free_tier" {
   type    = bool
   default = false
@@ -61,6 +74,8 @@ module "stack" {
   cosmos_free_tier             = var.cosmos_free_tier
   alert_email                  = var.alert_email
   monthly_budget_usd           = 5
+  owner_email                  = var.owner_email
+  owner_password               = var.owner_password
 }
 
 output "app_url" {

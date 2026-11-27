@@ -57,6 +57,27 @@ variable "alert_email" {
   default     = null
 }
 
+variable "owner_email" {
+  description = "Correo de la cuenta inicial del dueño."
+  type        = string
+  default     = ""
+}
+
+variable "owner_password" {
+  description = "Contraseña inicial del dueño."
+  type        = string
+  default     = ""
+  sensitive   = true
+
+  validation {
+    condition = (
+      (var.owner_email == "" && var.owner_password == "") ||
+      (can(regex("^[^@[:space:]]+@[^@[:space:]]+$", var.owner_email)) && length(var.owner_password) >= 10)
+    )
+    error_message = "Configura juntos un correo válido y una contraseña de al menos 10 caracteres, o deja ambos vacíos."
+  }
+}
+
 variable "alert_5xx_threshold" {
   description = "Errores 5xx en 5 minutos que disparan la alerta."
   type        = number
